@@ -9,10 +9,6 @@ export async function registerHandler(
 ) {
   const { email, password, name } = request.body
 
-  if (!email || !password) {
-    return reply.status(400).send({ error: "Email and password are required" })
-  }
-
   // Check if user already exists
   const existingUser = await prisma.user.findUnique({
     where: { email }
@@ -45,10 +41,6 @@ export async function loginHandler(
   reply: FastifyReply
 ) {
   const { email, password } = request.body
-
-  if (!email || !password) {
-    return reply.status(400).send({ error: "Email and password are required" })
-  }
 
   const user = await prisma.user.findUnique({
     where: { email }

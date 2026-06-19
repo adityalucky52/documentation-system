@@ -1,8 +1,9 @@
+import { Link, useParams } from "react-router-dom"
 import { useAuthStore } from "../auth/authStore"
+import { useSitesStore } from "../sites/sitesStore"
 import { 
   Plus, 
   GitBranch, 
-  Book, 
   Tv, 
   BookOpen, 
   ArrowRight
@@ -11,6 +12,8 @@ import {
 export default function DashboardPage() {
   const { user } = useAuthStore()
   const userName = user?.name || user?.email?.split("@")[0] || "aditya"
+  const { sites, setCreateModalOpen } = useSitesStore()
+  const { orgId } = useParams<{ orgId: string }>()
 
   return (
     <div className="max-w-[1012px] w-full mx-auto px-8 py-10 flex flex-col gap-9 font-sans text-[#f5f5f7]">
@@ -24,7 +27,10 @@ export default function DashboardPage() {
       {/* Quick Action Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* New Card */}
-        <button className="flex flex-col items-center justify-center gap-3 p-6 bg-[#161618] border border-[#222225] hover:border-[#323236] hover:bg-[#1a1a1c] rounded-xl transition-all cursor-pointer group">
+        <button 
+          onClick={() => setCreateModalOpen(true)}
+          className="flex flex-col items-center justify-center gap-3 p-6 bg-[#161618] border border-[#222225] hover:border-[#323236] hover:bg-[#1a1a1c] rounded-xl transition-all cursor-pointer group w-full text-left"
+        >
           <div className="w-11 h-11 rounded-lg bg-[#222225] border border-[#2c2c30] flex items-center justify-center transition-colors">
             <Plus className="h-5 w-5 text-white" />
           </div>
@@ -55,22 +61,48 @@ export default function DashboardPage() {
       <div className="flex flex-col gap-3">
         <h2 className="text-xs font-semibold tracking-wider text-[#8e8e93] uppercase">Recents</h2>
         
-        <div className="flex items-center justify-between p-4 bg-[#161618] border border-[#222225] hover:border-[#323236] hover:bg-[#1a1a1c] rounded-xl transition-all cursor-pointer group">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-[#312e81]/20 border border-[#4338ca]/30 flex items-center justify-center text-[#818cf8] shrink-0">
-              <Book className="h-5 w-5" />
-            </div>
-            <div className="flex flex-col">
-              <div className="flex items-center gap-1 text-sm">
-                <span className="text-[#8e8e93]">{userName}</span>
-                <span className="text-[#3a3a3f]">/</span>
-                <span className="font-semibold text-white group-hover:text-white transition-colors">Docs</span>
-              </div>
-              <span className="text-xs text-[#8e8e93] mt-0.5">Last edited now</span>
-            </div>
+        {sites.length === 0 ? (
+          <div className="p-8 text-center bg-[#161618] border border-[#222225] rounded-xl">
+            <p className="text-sm text-[#8e8e93]">No recent sites. Create one to get started!</p>
           </div>
-        </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {sites.map((site) => (
+              <Link 
+                key={site.id}
+                to={`/o/${orgId}/sites/${site.id}`}
+                className="flex items-center justify-between p-4 bg-[#161618] border border-[#222225] hover:border-[#323236] hover:bg-[#1a1a1c] rounded-xl transition-all cursor-pointer group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-[#222225] border border-[#2c2c30] flex items-center justify-center text-[#8e8e93] shrink-0 group-hover:text-white transition-colors">
+                    <svg 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="2" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      className="h-5 w-5"
+                    >
+                      <rect x="4" y="4" width="16" height="16" rx="2" />
+                      <path d="M4 15h16" />
+                    </svg>
+                  </div>
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-1 text-sm">
+                      <span className="text-[#8e8e93]">{userName}</span>
+                      <span className="text-[#3a3a3f]">/</span>
+                      <span className="font-semibold text-white group-hover:text-white transition-colors">{site.name}</span>
+                    </div>
+                    <span className="text-xs text-[#8e8e93] mt-0.5">Last edited {site.updatedAt}</span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
+
 
       {/* Bottom Grid: Dive Deeper & Integrations */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-2">

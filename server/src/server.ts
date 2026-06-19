@@ -2,6 +2,7 @@ import Fastify from "fastify"
 import cors from "@fastify/cors"
 import { authRoutes } from "./features/auth/auth.routes.js"
 import { orgRoutes } from "./features/org/org.routes.js"
+import { siteRoutes } from "./features/site/site.routes.js"
 import { errorHandler } from "./lib/errorHandler.js"
 
 const fastify = Fastify({
@@ -19,6 +20,7 @@ await fastify.register(cors, {
 // Register Routes
 await fastify.register(authRoutes, { prefix: "/api/auth" })
 await fastify.register(orgRoutes, { prefix: "/api/org" })
+await fastify.register(siteRoutes, { prefix: "/api/site" })
 
 // Declare a default base route
 fastify.get("/", async (request, reply) => {

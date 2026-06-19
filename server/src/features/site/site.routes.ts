@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify"
-import { createOrgHandler, getMyOrgHandler } from "./org.controller.js"
+import { createSiteHandler, getSitesHandler, setupSiteHandler } from "./site.controller.js"
 
 declare module "fastify" {
   interface FastifyRequest {
@@ -7,7 +7,7 @@ declare module "fastify" {
   }
 }
 
-const createOrgSchema = {
+const createSiteSchema = {
   body: {
     type: "object",
     required: ["name"],
@@ -17,7 +17,17 @@ const createOrgSchema = {
   }
 }
 
-export async function orgRoutes(fastify: FastifyInstance) {
+const setupSiteSchema = {
+  body: {
+    type: "object",
+    required: ["type"],
+    properties: {
+      type: { type: "string" }
+    }
+  }
+}
+
+export async function siteRoutes(fastify: FastifyInstance) {
   // Pre-handler hook to validate and extract authentication headers
   fastify.addHook("preHandler", async (request, reply) => {
     const userId = request.headers["x-user-id"] as string
@@ -27,7 +37,7 @@ export async function orgRoutes(fastify: FastifyInstance) {
     request.userId = userId
   })
 
-  fastify.post("/", { schema: createOrgSchema }, createOrgHandler)
-  fastify.get("/me", getMyOrgHandler)
+  fastify.post("/", { schema: createSiteSchema }, createSiteHandler)
+  fastify.get("/", getSitesHandler)
+  fastify.post("/:siteId/setup", { schema: setupSiteSchema }, setupSiteHandler)
 }
-

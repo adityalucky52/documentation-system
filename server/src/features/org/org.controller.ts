@@ -1,20 +1,13 @@
 import { FastifyRequest, FastifyReply } from "fastify"
 import { prisma } from "../../lib/prisma.js"
+import { CreateOrgDto, OrgResponseDto, GetOrgResponseDto } from "./org.dto.js"
 
 export async function createOrgHandler(
-  request: FastifyRequest<{ Body: { name: string; userId?: string } }>,
+  request: FastifyRequest<{ Body: CreateOrgDto }>,
   reply: FastifyReply
 ) {
-  const { name, userId: bodyUserId } = request.body
-  const userId = bodyUserId || (request.headers["x-user-id"] as string)
-
-  if (!name) {
-    return reply.status(400).send({ error: "Organization name is required" })
-  }
-
-  if (!userId) {
-    return reply.status(401).send({ error: "User ID is required" })
-  }
+  const { name } = request.body
+  const userId = request.userId!
 
   // Check if organization already exists for the user
   const existingOrg = await prisma.organization.findUnique({
@@ -23,35 +16,38 @@ export async function createOrgHandler(
 
   if (existingOrg) {
     // If it already exists, return it (since only one org is allowed per user)
-    return reply.send({
+    const response: OrgResponseDto = {
       message: "Organization already exists",
       organization: existingOrg
-    })
+    }
+    return reply.send(response)
   }
+
+  // Generate a short ID of 8 characters
+  const orgId = Math.random().toString(36).substring(2, 10)
 
   // Create organization
   const organization = await prisma.organization.create({
     data: {
+      id: orgId,
       name,
       userId
     }
   })
 
-  return reply.status(201).send({
+  const response: OrgResponseDto = {
     message: "Organization created successfully",
     organization
-  })
+  }
+
+  return reply.status(201).send(response)
 }
 
 export async function getMyOrgHandler(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
-  const userId = request.headers["x-user-id"] as string
-
-  if (!userId) {
-    return reply.status(401).send({ error: "User ID is required" })
-  }
+  const userId = request.userId!
 
   const organization = await prisma.organization.findUnique({
     where: { userId }
@@ -61,5 +57,8 @@ export async function getMyOrgHandler(
     return reply.status(404).send({ error: "Organization not found" })
   }
 
-  return reply.send({ organization })
+  const response: GetOrgResponseDto = { organization }
+  return reply.send(response)
 }
+
+
