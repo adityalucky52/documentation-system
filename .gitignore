@@ -1,0 +1,65 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Production/Build outputs
+dist/
+**/dist/
+dist-ssr/
+**/dist-ssr/
+out/
+build/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+**/.env
+**/.env.local
+**/.env.*.local
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# System Files
+.DS_Store
+Thumbs.db
+
+# IDEs and editors
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Database / Local server outputs
+/server/generated/
+*.db
+*.sqlite
+
+# Testing and Coverage
+coverage/
+*.lcov
+.nyc_output/
+
+# Tooling and Caches
+.eslintcache
+*.tsbuildinfo
+
+# Agent / local workspace state
+.superpowers/
+.agents/
+skills-lock.json
+
