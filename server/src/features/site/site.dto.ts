@@ -2,10 +2,20 @@ export interface CreateSiteDto {
   name: string
 }
 
+export interface PageDto {
+  id: string
+  title: string
+  content: string
+  spaceId: string
+  createdAt: Date
+  updatedAt: Date
+}
+
 export interface SpaceDto {
   id: string
   name: string
   siteId: string
+  pages?: PageDto[]
   createdAt: Date
   updatedAt: Date
 }

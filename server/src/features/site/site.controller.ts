@@ -21,7 +21,7 @@ export async function createSiteHandler(
   // Generate a short ID of exactly 7 characters
   const siteId = Math.random().toString(36).substring(2, 9)
 
-  // Create the site
+  // Create a site
   const site = await prisma.site.create({
     data: {
       id: siteId,
@@ -30,7 +30,11 @@ export async function createSiteHandler(
       isSetup: false
     },
     include: {
-      spaces: true
+      spaces: {
+        include: {
+          pages: true
+        }
+      }
     }
   })
 
@@ -62,7 +66,11 @@ export async function getSitesHandler(
       organizationId: organization.id
     },
     include: {
-      spaces: true
+      spaces: {
+        include: {
+          pages: true
+        }
+      }
     },
     orderBy: {
       updatedAt: "desc"
@@ -98,11 +106,28 @@ export async function setupSiteHandler(
     }
   })
 
+  // Create a default Page in the new Space
+  const pageId = `page_${Math.random().toString(36).substring(2, 7)}`
+  await prisma.page.create({
+    data: {
+      id: pageId,
+      title: "Welcome",
+      content: "# Welcome to your new space\nStart editing here...",
+      spaceId: spaceId
+    }
+  })
+
   // Update site isSetup flag
   const updatedSite = await prisma.site.update({
     where: { id: site.id },
     data: { isSetup: true },
-    include: { spaces: true }
+    include: {
+      spaces: {
+        include: {
+          pages: true
+        }
+      }
+    }
   })
 
   const response: SiteResponseDto = {
@@ -111,4 +136,102 @@ export async function setupSiteHandler(
   }
 
   return reply.send(response)
+}
+
+export async function getSpaceHandler(
+  request: FastifyRequest<{ Params: { spaceId: string } }>,
+  reply: FastifyReply
+) {
+  const { spaceId } = request.params
+
+  const space = await prisma.space.findUnique({
+    where: { id: spaceId },
+    include: {
+      pages: {
+        orderBy: { createdAt: "asc" }
+      },
+      site: true
+    }
+  })
+
+  if (!space) {
+    return reply.status(404).send({ error: "Space not found" })
+  }
+
+  return reply.send(space)
+}
+
+export async function createPageHandler(
+  request: FastifyRequest<{ Params: { spaceId: string }; Body: { title: string } }>,
+  reply: FastifyReply
+) {
+  const { spaceId } = request.params
+  const { title } = request.body
+
+  const space = await prisma.space.findUnique({
+    where: { id: spaceId }
+  })
+
+  if (!space) {
+    return reply.status(404).send({ error: "Space not found" })
+  }
+
+  const pageId = `page_${Math.random().toString(36).substring(2, 7)}`
+  const page = await prisma.page.create({
+    data: {
+      id: pageId,
+      title: title || "Untitled Page",
+      content: "",
+      spaceId: space.id
+    }
+  })
+
+  return reply.status(201).send(page)
+}
+
+export async function updatePageHandler(
+  request: FastifyRequest<{ Params: { pageId: string }; Body: { title?: string; content?: string } }>,
+  reply: FastifyReply
+) {
+  const { pageId } = request.params
+  const { title, content } = request.body
+
+  const page = await prisma.page.findUnique({
+    where: { id: pageId }
+  })
+
+  if (!page) {
+    return reply.status(404).send({ error: "Page not found" })
+  }
+
+  const updatedPage = await prisma.page.update({
+    where: { id: pageId },
+    data: {
+      title: title !== undefined ? title : page.title,
+      content: content !== undefined ? content : page.content
+    }
+  })
+
+  return reply.send(updatedPage)
+}
+
+export async function deleteSiteHandler(
+  request: FastifyRequest<{ Params: { siteId: string } }>,
+  reply: FastifyReply
+) {
+  const { siteId } = request.params
+
+  const site = await prisma.site.findUnique({
+    where: { id: siteId }
+  })
+
+  if (!site) {
+    return reply.status(404).send({ error: "Site not found" })
+  }
+
+  await prisma.site.delete({
+    where: { id: siteId }
+  })
+
+  return reply.send({ message: "Site deleted successfully" })
 }

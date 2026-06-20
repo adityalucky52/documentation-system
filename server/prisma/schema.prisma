@@ -49,6 +49,17 @@ model Space {
   name      String
   siteId    String
   site      Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  pages     Page[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Page {
+  id        String   @id
+  title     String
+  content   String   @default("")
+  spaceId   String
+  space     Space    @relation(fields: [spaceId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

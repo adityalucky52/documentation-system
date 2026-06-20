@@ -1,5 +1,13 @@
 import { FastifyInstance } from "fastify"
-import { createSiteHandler, getSitesHandler, setupSiteHandler } from "./site.controller.js"
+import { 
+  createSiteHandler, 
+  getSitesHandler, 
+  setupSiteHandler,
+  getSpaceHandler,
+  createPageHandler,
+  updatePageHandler,
+  deleteSiteHandler
+} from "./site.controller.js"
 
 declare module "fastify" {
   interface FastifyRequest {
@@ -40,4 +48,10 @@ export async function siteRoutes(fastify: FastifyInstance) {
   fastify.post("/", { schema: createSiteSchema }, createSiteHandler)
   fastify.get("/", getSitesHandler)
   fastify.post("/:siteId/setup", { schema: setupSiteSchema }, setupSiteHandler)
+  
+  // Space and Page routing
+  fastify.get("/spaces/:spaceId", getSpaceHandler)
+  fastify.post("/spaces/:spaceId/pages", createPageHandler)
+  fastify.put("/pages/:pageId", updatePageHandler)
+  fastify.delete("/:siteId", deleteSiteHandler)
 }

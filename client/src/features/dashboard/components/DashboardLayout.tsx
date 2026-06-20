@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { useParams, useNavigate, Link, Outlet } from "react-router-dom"
 import { useAuthStore } from "../../auth/authStore"
 import { useSitesStore } from "../../sites/sitesStore"
@@ -18,7 +18,8 @@ import {
 export default function DashboardLayout() {
   const { orgId } = useParams<{ orgId: string }>()
   const navigate = useNavigate()
-  const { user, organization, fetchMyOrganization, logout } = useAuthStore()
+  const { user, organization, fetchMyOrganization, logout, isLoading } = useAuthStore()
+  const lastFetchedOrgId = useRef<string | null>(null)
   
   // Sites Store integration
   const { sites, fetchSites, isCreateModalOpen, setCreateModalOpen } = useSitesStore()
@@ -35,11 +36,15 @@ export default function DashboardLayout() {
       return
     }
 
+    if (isLoading) return
+    if (lastFetchedOrgId.current === orgId) return
+
     // Fetch organization if it isn't set in store or if it doesn't match the route orgId
     if (!organization || organization.id !== orgId) {
+      lastFetchedOrgId.current = orgId || null
       fetchMyOrganization()
     }
-  }, [user, orgId, organization, navigate, fetchMyOrganization])
+  }, [user, orgId, organization, navigate, fetchMyOrganization, isLoading])
 
   useEffect(() => {
     if (user) {
@@ -130,7 +135,8 @@ export default function DashboardLayout() {
 
                     {/* Nested Spaces */}
                     {site.isSetup && site.spaces && site.spaces.map((space) => (
-                      <div 
+                      <Link 
+                        to={`/o/${orgId}/s/${space.id}`}
                         key={space.id}
                         className="flex items-center gap-2 px-2.5 py-1.5 ml-4 rounded-md text-xs font-medium text-[#8e8e93] hover:text-white hover:bg-[#1a1a1e] transition-colors cursor-pointer group"
                       >
@@ -148,7 +154,7 @@ export default function DashboardLayout() {
                           <path d="M6 10h10"/>
                         </svg>
                         <span className="truncate">{space.name}</span>
-                      </div>
+                      </Link>
                     ))}
                   </div>
                 ))}

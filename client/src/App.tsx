@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom"
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import LandingPage from "./features/landing/LandingPage"
 import LoginPage from "./features/auth/LoginPage"
 import RegisterPage from "./features/auth/RegisterPage"
@@ -6,6 +6,7 @@ import CreateOrganizationPage from "./features/org/CreateOrganizationPage"
 import DashboardLayout from "./features/dashboard/components/DashboardLayout"
 import DashboardPage from "./features/dashboard/DashboardPage"
 import SiteSetupPage from "./features/sites/components/SiteSetupPage"
+import SpaceEditorPage from "./features/sites/components/SpaceEditorPage"
 
 function App() {
   return (
@@ -16,8 +17,10 @@ function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/create-organization" element={<CreateOrganizationPage />} />
         <Route path="/o/:orgId" element={<DashboardLayout />}>
+          <Route index element={<Navigate to="home" replace />} />
           <Route path="home" element={<DashboardPage />} />
           <Route path="sites/:siteId" element={<SiteSetupPage />} />
+          <Route path="s/:spaceId" element={<SpaceEditorPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

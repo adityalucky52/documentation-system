@@ -14,7 +14,9 @@ fastify.setErrorHandler(errorHandler)
 
 // Enable CORS
 await fastify.register(cors, {
-  origin: "*" // In production, replace with specific origins
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "x-user-id", "Authorization"]
 })
 
 // Register Routes

@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useParams } from "react-router-dom"
+import { useParams, useNavigate } from "react-router-dom"
 import { useSitesStore } from "../sitesStore"
 import { useAuthStore } from "../../auth/authStore"
 import { 
@@ -13,12 +13,14 @@ import {
   Plus,
   Compass,
   ChevronRight,
-  GitBranch
+  GitBranch,
+  Trash2
 } from "lucide-react"
 
 export default function SiteSetupPage() {
-  const { siteId } = useParams<{ siteId: string }>()
-  const { sites, setupSite } = useSitesStore()
+  const { siteId, orgId } = useParams<{ siteId: string; orgId: string }>()
+  const navigate = useNavigate()
+  const { sites, setupSite, deleteSite } = useSitesStore()
   const { user } = useAuthStore()
   const site = sites.find((s) => s.id === siteId)
   const siteName = site?.name || "Site"
@@ -27,6 +29,16 @@ export default function SiteSetupPage() {
   const handleSetupBlank = async () => {
     if (!site || !user) return
     await setupSite(site.id, "blank", user.id)
+  }
+
+  const handleDeleteSite = async () => {
+    if (!site || !user) return
+    if (confirm(`Are you absolutely sure you want to delete the site "${site.name}"? This action is permanent and cannot be undone.`)) {
+      const success = await deleteSite(site.id, user.id)
+      if (success) {
+        navigate(`/o/${orgId}/home`)
+      }
+    }
   }
 
   if (!site) {
@@ -168,7 +180,13 @@ export default function SiteSetupPage() {
             Overview
           </button>
           <button 
-            onClick={() => setActiveTab("editor")}
+            onClick={() => {
+              if (site.spaces && site.spaces.length > 0) {
+                navigate(`/o/${orgId}/s/${site.spaces[0].id}`)
+              } else {
+                setActiveTab("editor")
+              }
+            }}
             className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${activeTab === "editor" ? "bg-[#1c1c1e] text-white" : "text-[#8e8e93] hover:text-white hover:bg-[#161618]"}`}
           >
             Editor
@@ -267,99 +285,129 @@ export default function SiteSetupPage() {
           </div>
         </div>
 
-        {/* Right Column: Get Started Checklist (8 cols) */}
-        <div className="lg:col-span-8 flex flex-col gap-4">
-          <div className="flex items-center justify-between mb-1">
-            <h2 className="text-sm font-semibold tracking-wider text-[#8e8e93] uppercase">Get started</h2>
-            <span className="text-xs font-semibold text-[#8e8e93] bg-[#161618] px-2 py-0.5 rounded border border-[#222225]">
-              0/7 tasks completed
-            </span>
-          </div>
+        {/* Right Column: Get Started Checklist (8 cols) or Settings Panel */}
+        {activeTab === "settings" ? (
+          <div className="lg:col-span-8 flex flex-col gap-6 animate-in fade-in duration-200">
+            <div className="flex flex-col gap-1.5 shrink-0">
+              <h2 className="text-sm font-semibold tracking-wider text-[#8e8e93] uppercase">Site Settings</h2>
+              <p className="text-xs text-[#8e8e93]">Manage configurations and control access for this documentation site.</p>
+            </div>
 
-          <div className="flex flex-col gap-3">
-            
-            {/* Task 1: Edit your content (Expanded active task) */}
-            <div className="bg-[#161618] border border-[#222225] rounded-xl p-6 flex flex-col gap-4">
-              <div className="flex items-start justify-between">
-                <div className="flex gap-3.5">
-                  <div className="w-9 h-9 rounded-lg bg-[#222225] border border-[#2c2c30] flex items-center justify-center text-white shrink-0">
-                    <PenTool className="h-4.5 w-4.5" />
-                  </div>
-                  <div className="flex flex-col gap-1 mt-0.5">
-                    <h3 className="text-sm font-semibold text-white">Edit your content</h3>
-                    <p className="text-xs text-[#8e8e93] leading-relaxed max-w-[500px]">
-                      Create a change request to edit your site's content safely, then merge it to update your site when ready.
-                    </p>
-                  </div>
-                </div>
+            <div className="bg-[#161618] border border-[#e11d48]/20 rounded-xl p-6 flex flex-col gap-5">
+              <div className="flex flex-col gap-1.5 border-b border-[#222225] pb-4">
+                <h3 className="text-sm font-semibold text-white">Danger Zone</h3>
+                <p className="text-xs text-[#8e8e93]">Irreversible actions regarding this documentation site.</p>
               </div>
 
-              {/* Expand controls */}
-              <div className="flex items-center gap-3 pl-[50px] mt-1">
-                <button className="px-3.5 py-1.5 text-xs font-semibold text-black bg-white hover:bg-white/95 rounded-md flex items-center gap-1.5 transition-all cursor-pointer">
-                  <GitBranch className="h-3.5 w-3.5" />
-                  <span>Edit in your first change request</span>
-                </button>
-                <button className="px-3 py-1.5 text-xs font-semibold text-white bg-[#1c1c1e] hover:bg-[#222225] border border-[#2d2d30] rounded-md transition-colors cursor-pointer">
-                  Skip for now
+              <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-0.5">
+                  <h4 className="text-xs font-semibold text-white">Delete this site</h4>
+                  <p className="text-[11px] text-[#8e8e93]">Once deleted, all pages, spaces, and content will be permanently lost.</p>
+                </div>
+                <button 
+                  onClick={handleDeleteSite}
+                  className="px-4 py-2 bg-[#e11d48]/10 hover:bg-[#e11d48] border border-[#e11d48]/30 hover:border-transparent text-[#f43f5e] hover:text-white rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer flex items-center gap-1.5 shadow-sm"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Delete Site</span>
                 </button>
               </div>
             </div>
-
-            {/* Task 2: Invite teammates */}
-            <div className="bg-[#161618] border border-[#222225] hover:border-[#323236] rounded-xl p-4 flex items-center justify-between transition-colors cursor-pointer group">
-              <div className="flex items-center gap-3.5">
-                <div className="w-8 h-8 rounded-lg bg-[#222225] border border-[#2c2c30] flex items-center justify-center text-[#8e8e93] group-hover:text-white shrink-0 transition-colors">
-                  <UserPlus className="h-4 w-4" />
-                </div>
-                <span className="text-xs font-semibold text-[#8e8e93] group-hover:text-white transition-colors">
-                  Invite teammates
-                </span>
-              </div>
-              <Plus className="h-4 w-4 text-[#8e8e93]" />
-            </div>
-
-            {/* Task 3: Customize look and feel */}
-            <div className="bg-[#161618] border border-[#222225] hover:border-[#323236] rounded-xl p-4 flex items-center justify-between transition-colors cursor-pointer group">
-              <div className="flex items-center gap-3.5">
-                <div className="w-8 h-8 rounded-lg bg-[#222225] border border-[#2c2c30] flex items-center justify-center text-[#8e8e93] group-hover:text-white shrink-0 transition-colors">
-                  <Palette className="h-4 w-4" />
-                </div>
-                <span className="text-xs font-semibold text-[#8e8e93] group-hover:text-white transition-colors">
-                  Customize the look and feel
-                </span>
-              </div>
-              <Plus className="h-4 w-4 text-[#8e8e93]" />
-            </div>
-
-            {/* Task 4: Add structure to site */}
-            <div className="bg-[#161618] border border-[#222225] hover:border-[#323236] rounded-xl p-4 flex items-center justify-between transition-colors cursor-pointer group">
-              <div className="flex items-center gap-3.5">
-                <div className="w-8 h-8 rounded-lg bg-[#222225] border border-[#2c2c30] flex items-center justify-center text-[#8e8e93] group-hover:text-white shrink-0 transition-colors">
-                  <Compass className="h-4 w-4" />
-                </div>
-                <span className="text-xs font-semibold text-[#8e8e93] group-hover:text-white transition-colors">
-                  Add structure to your site
-                </span>
-              </div>
-              <Plus className="h-4 w-4 text-[#8e8e93]" />
-            </div>
-
-            {/* Task 5: Add custom domain */}
-            <div className="bg-[#161618] border border-[#222225] hover:border-[#323236] rounded-xl p-4 flex items-center justify-between transition-colors cursor-pointer group">
-              <div className="flex items-center gap-3.5">
-                <div className="w-8 h-8 rounded-lg bg-[#222225] border border-[#2c2c30] flex items-center justify-center text-[#8e8e93] group-hover:text-white shrink-0 transition-colors">
-                  <Globe className="h-4 w-4" />
-                </div>
-                <span className="text-xs font-semibold text-[#8e8e93] group-hover:text-white transition-colors">
-                  Add a custom domain
-                </span>
-              </div>
-              <Plus className="h-4 w-4 text-[#8e8e93]" />
-            </div>
-
           </div>
-        </div>
+        ) : (
+          <div className="lg:col-span-8 flex flex-col gap-4">
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="text-sm font-semibold tracking-wider text-[#8e8e93] uppercase">Get started</h2>
+              <span className="text-xs font-semibold text-[#8e8e93] bg-[#161618] px-2 py-0.5 rounded border border-[#222225]">
+                0/7 tasks completed
+              </span>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              
+              {/* Task 1: Edit your content (Expanded active task) */}
+              <div className="bg-[#161618] border border-[#222225] rounded-xl p-6 flex flex-col gap-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex gap-3.5">
+                    <div className="w-9 h-9 rounded-lg bg-[#222225] border border-[#2c2c30] flex items-center justify-center text-white shrink-0">
+                      <PenTool className="h-4.5 w-4.5" />
+                    </div>
+                    <div className="flex flex-col gap-1 mt-0.5">
+                      <h3 className="text-sm font-semibold text-white">Edit your content</h3>
+                      <p className="text-xs text-[#8e8e93] leading-relaxed max-w-[500px]">
+                        Create a change request to edit your site's content safely, then merge it to update your site when ready.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Expand controls */}
+                <div className="flex items-center gap-3 pl-[50px] mt-1">
+                  <button className="px-3.5 py-1.5 text-xs font-semibold text-black bg-white hover:bg-white/95 rounded-md flex items-center gap-1.5 transition-all cursor-pointer">
+                    <GitBranch className="h-3.5 w-3.5" />
+                    <span>Edit in your first change request</span>
+                  </button>
+                  <button className="px-3 py-1.5 text-xs font-semibold text-white bg-[#1c1c1e] hover:bg-[#222225] border border-[#2d2d30] rounded-md transition-colors cursor-pointer">
+                    Skip for now
+                  </button>
+                </div>
+              </div>
+
+              {/* Task 2: Invite teammates */}
+              <div className="bg-[#161618] border border-[#222225] hover:border-[#323236] rounded-xl p-4 flex items-center justify-between transition-colors cursor-pointer group">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#222225] border border-[#2c2c30] flex items-center justify-center text-[#8e8e93] group-hover:text-white shrink-0 transition-colors">
+                    <UserPlus className="h-4 w-4" />
+                  </div>
+                  <span className="text-xs font-semibold text-[#8e8e93] group-hover:text-white transition-colors">
+                    Invite teammates
+                  </span>
+                </div>
+                <Plus className="h-4 w-4 text-[#8e8e93]" />
+              </div>
+
+              {/* Task 3: Customize look and feel */}
+              <div className="bg-[#161618] border border-[#222225] hover:border-[#323236] rounded-xl p-4 flex items-center justify-between transition-colors cursor-pointer group">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#222225] border border-[#2c2c30] flex items-center justify-center text-[#8e8e93] group-hover:text-white shrink-0 transition-colors">
+                    <Palette className="h-4 w-4" />
+                  </div>
+                  <span className="text-xs font-semibold text-[#8e8e93] group-hover:text-white transition-colors">
+                    Customize the look and feel
+                  </span>
+                </div>
+                <Plus className="h-4 w-4 text-[#8e8e93]" />
+              </div>
+
+              {/* Task 4: Add structure to site */}
+              <div className="bg-[#161618] border border-[#222225] hover:border-[#323236] rounded-xl p-4 flex items-center justify-between transition-colors cursor-pointer group">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#222225] border border-[#2c2c30] flex items-center justify-center text-[#8e8e93] group-hover:text-white shrink-0 transition-colors">
+                    <Compass className="h-4 w-4" />
+                  </div>
+                  <span className="text-xs font-semibold text-[#8e8e93] group-hover:text-white transition-colors">
+                    Add structure to your site
+                  </span>
+                </div>
+                <Plus className="h-4 w-4 text-[#8e8e93]" />
+              </div>
+
+              {/* Task 5: Add custom domain */}
+              <div className="bg-[#161618] border border-[#222225] hover:border-[#323236] rounded-xl p-4 flex items-center justify-between transition-colors cursor-pointer group">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#222225] border border-[#2c2c30] flex items-center justify-center text-[#8e8e93] group-hover:text-white shrink-0 transition-colors">
+                    <Globe className="h-4 w-4" />
+                  </div>
+                  <span className="text-xs font-semibold text-[#8e8e93] group-hover:text-white transition-colors">
+                    Add a custom domain
+                  </span>
+                </div>
+                <Plus className="h-4 w-4 text-[#8e8e93]" />
+              </div>
+
+            </div>
+          </div>
+        )}
 
       </div>
     </div>
