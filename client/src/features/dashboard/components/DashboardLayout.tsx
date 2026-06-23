@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react"
 import { useParams, useNavigate, Link, Outlet } from "react-router-dom"
 import { useAuthStore } from "../../auth/authStore"
-import { useSitesStore } from "../../sites/sitesStore"
-import CreateSiteModal from "../../sites/components/CreateSiteModal"
+import { useSitesStore } from "../../sites-management/sitesStore"
+import CreateSiteModal from "../../sites-management/components/CreateSiteModal"
 import { 
   ChevronDown, 
   Search, 
@@ -12,7 +12,8 @@ import {
   Settings, 
   MessageSquare,
   Plus,
-  LogOut
+  LogOut,
+  GitPullRequest
 } from "lucide-react"
 
 export default function DashboardLayout() {
@@ -76,14 +77,21 @@ export default function DashboardLayout() {
             </div>
           </div>
 
-          {/* Navigation Links */}
           <nav className="flex flex-col gap-0.5">
             <Link 
               to={`/o/${orgId}/home`}
-              className="flex items-center gap-2 bg-[#1c1c1e] text-[#f4f4f5] px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors"
+              className={`flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors ${window.location.pathname.endsWith("/home") ? "bg-[#1c1c1e] text-[#f4f4f5]" : "text-[#8e8e93] hover:text-white hover:bg-[#1a1a1e]"}`}
             >
               <Home className="h-4 w-4" />
               <span>Home</span>
+            </Link>
+
+            <Link 
+              to={`/o/${orgId}/changes`}
+              className={`flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors ${window.location.pathname.includes("/changes") ? "bg-[#1c1c1e] text-[#f4f4f5]" : "text-[#8e8e93] hover:text-white hover:bg-[#1a1a1e]"}`}
+            >
+              <GitPullRequest className="h-4 w-4" />
+              <span>Change requests</span>
             </Link>
           </nav>
 

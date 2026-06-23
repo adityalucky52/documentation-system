@@ -1,0 +1,131 @@
+/* Tiptap Editor Base Typography */
+.ProseMirror {
+  outline: none;
+  min-height: 250px;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #f5f5f7;
+}
+
+/* Empty paragraph placeholder */
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #8e8e93;
+  pointer-events: none;
+  height: 0;
+}
+
+/* Headings */
+.ProseMirror h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  color: #ffffff;
+}
+
+.ProseMirror h2 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin-top: 1.4em;
+  margin-bottom: 0.4em;
+  color: #ffffff;
+}
+
+.ProseMirror h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-top: 1.3em;
+  margin-bottom: 0.3em;
+  color: #ffffff;
+}
+
+/* Paragraphs & Spacing */
+.ProseMirror p {
+  margin-top: 0;
+  margin-bottom: 0.8em;
+}
+
+/* Lists */
+.ProseMirror ul,
+.ProseMirror ol {
+  padding-left: 1.5em;
+  margin-bottom: 0.8em;
+}
+
+.ProseMirror ul {
+  list-style-type: disc;
+}
+
+.ProseMirror ol {
+  list-style-type: decimal;
+}
+
+.ProseMirror li {
+  margin-bottom: 0.25em;
+}
+
+/* Code Blocks */
+.ProseMirror pre {
+  background: #0e0e11;
+  border: 1px solid #222225;
+  border-radius: 8px;
+  padding: 14px 18px;
+  font-family: 'GeistMono', monospace;
+  font-size: 12.5px;
+  color: #e4e4e7;
+  overflow-x: auto;
+  margin-bottom: 1.2em;
+}
+
+.ProseMirror pre code {
+  color: inherit;
+  padding: 0;
+  background: none;
+  font-size: inherit;
+}
+
+/* Inline Code */
+.ProseMirror code {
+  background: #1c1c1e;
+  border: 1px solid #2c2c30;
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-family: 'GeistMono', monospace;
+  font-size: 12.5px;
+  color: #e4e4e7;
+}
+
+/* Blockquotes */
+.ProseMirror blockquote {
+  border-left: 3px solid #3a3a3f;
+  padding-left: 1em;
+  margin-left: 0;
+  margin-right: 0;
+  color: #8e8e93;
+  font-style: italic;
+  margin-bottom: 1em;
+}
+
+/* Links */
+.ProseMirror a {
+  color: #0070f3;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.ProseMirror a:hover {
+  color: #0060d3;
+}
+
+/* Custom Callout Box Node */
+.ProseMirror .callout-box {
+  background: #1c1c1e;
+  border: 1px solid #2c2c30;
+  border-left: 4px solid #ff5722;
+  border-radius: 8px;
+  padding: 1em;
+  margin-bottom: 1em;
+}

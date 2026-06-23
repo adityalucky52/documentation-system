@@ -45,22 +45,72 @@ model Site {
 }
 
 model Space {
-  id        String   @id
-  name      String
-  siteId    String
-  site      Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
-  pages     Page[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String          @id
+  name           String
+  siteId         String
+  site           Site            @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  pages          Page[]
+  branches       Branch[]
+  changeRequests ChangeRequest[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 }
 
 model Page {
-  id        String   @id
+  id        String        @id
+  title     String
+  content   String        @default("")
+  spaceId   String
+  space     Space         @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  versions  PageVersion[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+enum ChangeRequestStatus {
+  DRAFT
+  OPEN
+  MERGED
+  CLOSED
+}
+
+model Branch {
+  id                   String          @id
+  name                 String          // e.g. "main", "change-request-123"
+  spaceId              String
+  space                Space           @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  pageVersions         PageVersion[]
+  changeRequestsSource ChangeRequest[] @relation("SourceBranch")
+  changeRequestsTarget ChangeRequest[] @relation("TargetBranch")
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+}
+
+model ChangeRequest {
+  id             String              @id
+  title          String
+  status         ChangeRequestStatus @default(DRAFT)
+  spaceId        String
+  space          Space               @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  sourceBranchId String
+  sourceBranch   Branch              @relation("SourceBranch", fields: [sourceBranchId], references: [id], onDelete: Cascade)
+  targetBranchId String
+  targetBranch   Branch              @relation("TargetBranch", fields: [targetBranchId], references: [id], onDelete: Cascade)
+  creatorId      String
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+}
+
+model PageVersion {
+  id        String   @id @default(uuid())
+  pageId    String
+  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  branchId  String
+  branch    Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
   title     String
   content   String   @default("")
-  spaceId   String
-  space     Space    @relation(fields: [spaceId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([pageId, branchId])
 }
 

@@ -63,3 +63,7 @@ coverage/
 .agents/
 skills-lock.json
 
+# Specs
+docs/superpowers/specs
+
+

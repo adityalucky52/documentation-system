@@ -32,13 +32,12 @@ interface SitesState {
   isLoading: boolean
   error: string | null
   isCreateModalOpen: boolean
+
   setCreateModalOpen: (isOpen: boolean) => void
   fetchSites: (userId: string) => Promise<void>
   addSite: (name: string, userId: string) => Promise<string | null>
-  setupSite: (siteId: string, type: string, userId: string) => Promise<boolean>
-  fetchSpace: (spaceId: string, userId: string) => Promise<void>
-  createPage: (spaceId: string, title: string, userId: string) => Promise<Page | null>
-  updatePage: (pageId: string, title: string, content: string, userId: string) => Promise<Page | null>
+  setupSite: (siteId: string, type: string, userId: string, importData?: { title: string; content: string }) => Promise<boolean>
+  fetchSpace: (spaceId: string, userId: string, branchId?: string) => Promise<void>
   deleteSite: (siteId: string, userId: string) => Promise<boolean>
 }
 
@@ -50,22 +49,19 @@ export const useSitesStore = create<SitesState>((set, get) => ({
   isLoading: false,
   error: null,
   isCreateModalOpen: false,
+
   setCreateModalOpen: (isOpen) => set({ isCreateModalOpen: isOpen }),
-  
+
   fetchSites: async (userId) => {
     set({ isLoading: true, error: null })
     try {
       const response = await fetch(API_URL, {
         method: "GET",
-        headers: {
-          "x-user-id": userId
-        }
+        headers: { "x-user-id": userId },
       })
       const data = await response.json()
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to fetch sites")
-      }
-      
+      if (!response.ok) throw new Error(data.error || "Failed to fetch sites")
+
       const mappedSites = data.sites.map((site: any) => ({
         id: site.id,
         name: site.name,
@@ -75,8 +71,8 @@ export const useSitesStore = create<SitesState>((set, get) => ({
           month: "short",
           day: "numeric",
           hour: "2-digit",
-          minute: "2-digit"
-        })
+          minute: "2-digit",
+        }),
       }))
 
       set({ sites: mappedSites, isLoading: false })
@@ -90,29 +86,21 @@ export const useSitesStore = create<SitesState>((set, get) => ({
     try {
       const response = await fetch(API_URL, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-user-id": userId
-        },
-        body: JSON.stringify({ name })
+        headers: { "Content-Type": "application/json", "x-user-id": userId },
+        body: JSON.stringify({ name }),
       })
       const data = await response.json()
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to create site")
-      }
+      if (!response.ok) throw new Error(data.error || "Failed to create site")
 
       const newSite: Site = {
         id: data.site.id,
         name: data.site.name,
         isSetup: data.site.isSetup,
         spaces: data.site.spaces || [],
-        updatedAt: "now"
+        updatedAt: "now",
       }
 
-      set((state) => ({
-        sites: [newSite, ...state.sites],
-        isLoading: false
-      }))
+      set((state) => ({ sites: [newSite, ...state.sites], isLoading: false }))
       return data.site.id
     } catch (err: any) {
       set({ error: err.message || "An unexpected error occurred", isLoading: false })
@@ -120,21 +108,16 @@ export const useSitesStore = create<SitesState>((set, get) => ({
     }
   },
 
-  setupSite: async (siteId, type, userId) => {
+  setupSite: async (siteId, type, userId, importData) => {
     set({ isLoading: true, error: null })
     try {
       const response = await fetch(`${API_URL}/${siteId}/setup`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-user-id": userId
-        },
-        body: JSON.stringify({ type })
+        headers: { "Content-Type": "application/json", "x-user-id": userId },
+        body: JSON.stringify({ type, ...importData }),
       })
       const data = await response.json()
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to setup site")
-      }
+      if (!response.ok) throw new Error(data.error || "Failed to setup site")
 
       const updatedSite: Site = {
         id: data.site.id,
@@ -145,13 +128,13 @@ export const useSitesStore = create<SitesState>((set, get) => ({
           month: "short",
           day: "numeric",
           hour: "2-digit",
-          minute: "2-digit"
-        })
+          minute: "2-digit",
+        }),
       }
 
       set((state) => ({
-        sites: state.sites.map((s) => s.id === siteId ? updatedSite : s),
-        isLoading: false
+        sites: state.sites.map((s) => (s.id === siteId ? updatedSite : s)),
+        isLoading: false,
       }))
       return true
     } catch (err: any) {
@@ -160,91 +143,26 @@ export const useSitesStore = create<SitesState>((set, get) => ({
     }
   },
 
-  fetchSpace: async (spaceId, userId) => {
+  fetchSpace: async (spaceId, userId, branchId) => {
     set({ isLoading: true, error: null })
     try {
-      const response = await fetch(`${API_URL}/spaces/${spaceId}`, {
+      // Import and read activeBranchId from useChangeRequestStore dynamically to prevent circular dependencies
+      const { useChangeRequestStore } = await import("../change-requests/changeRequestStore")
+      const resolvedBranchId = branchId ?? useChangeRequestStore.getState().activeBranchId
+      const url = resolvedBranchId
+        ? `${API_URL}/spaces/${spaceId}?branchId=${resolvedBranchId}`
+        : `${API_URL}/spaces/${spaceId}`
+
+      const response = await fetch(url, {
         method: "GET",
-        headers: {
-          "x-user-id": userId
-        }
+        headers: { "x-user-id": userId },
       })
       const data = await response.json()
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to fetch space details")
-      }
+      if (!response.ok) throw new Error(data.error || "Failed to fetch space details")
 
       set({ currentSpace: data, isLoading: false })
     } catch (err: any) {
       set({ error: err.message || "An unexpected error occurred", isLoading: false })
-    }
-  },
-
-  createPage: async (spaceId, title, userId) => {
-    set({ isLoading: true, error: null })
-    try {
-      const response = await fetch(`${API_URL}/spaces/${spaceId}/pages`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-user-id": userId
-        },
-        body: JSON.stringify({ title })
-      })
-      const data = await response.json()
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to create page")
-      }
-
-      const current = get().currentSpace
-      if (current && current.id === spaceId) {
-        set({
-          currentSpace: {
-            ...current,
-            pages: [...current.pages, data]
-          }
-        })
-      }
-
-      set({ isLoading: false })
-      return data
-    } catch (err: any) {
-      set({ error: err.message || "An unexpected error occurred", isLoading: false })
-      return null
-    }
-  },
-
-  updatePage: async (pageId, title, content, userId) => {
-    set({ isLoading: true, error: null })
-    try {
-      const response = await fetch(`${API_URL}/pages/${pageId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "x-user-id": userId
-        },
-        body: JSON.stringify({ title, content })
-      })
-      const data = await response.json()
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to update page")
-      }
-
-      const current = get().currentSpace
-      if (current) {
-        set({
-          currentSpace: {
-            ...current,
-            pages: current.pages.map((p) => p.id === pageId ? data : p)
-          }
-        })
-      }
-
-      set({ isLoading: false })
-      return data
-    } catch (err: any) {
-      set({ error: err.message || "An unexpected error occurred", isLoading: false })
-      return null
     }
   },
 
@@ -253,23 +171,16 @@ export const useSitesStore = create<SitesState>((set, get) => ({
     try {
       const response = await fetch(`${API_URL}/${siteId}`, {
         method: "DELETE",
-        headers: {
-          "x-user-id": userId
-        }
+        headers: { "x-user-id": userId },
       })
       const data = await response.json()
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to delete site")
-      }
+      if (!response.ok) throw new Error(data.error || "Failed to delete site")
 
-      set((state) => ({
-        sites: state.sites.filter((s) => s.id !== siteId),
-        isLoading: false
-      }))
+      set((state) => ({ sites: state.sites.filter((s) => s.id !== siteId), isLoading: false }))
       return true
     } catch (err: any) {
       set({ error: err.message || "An unexpected error occurred", isLoading: false })
       return false
     }
-  }
+  },
 }))

@@ -5,8 +5,9 @@ import RegisterPage from "./features/auth/RegisterPage"
 import CreateOrganizationPage from "./features/org/CreateOrganizationPage"
 import DashboardLayout from "./features/dashboard/components/DashboardLayout"
 import DashboardPage from "./features/dashboard/DashboardPage"
-import SiteSetupPage from "./features/sites/components/SiteSetupPage"
-import SpaceEditorPage from "./features/sites/components/SpaceEditorPage"
+import SiteSetupPage from "./features/sites-management/components/SiteSetupPage"
+import SpaceEditorPage from "./features/editor/components/SpaceEditorPage"
+import GlobalChangeRequestsPage from "./features/change-requests/components/GlobalChangeRequestsPage"
 
 function App() {
   return (
@@ -21,6 +22,10 @@ function App() {
           <Route path="home" element={<DashboardPage />} />
           <Route path="sites/:siteId" element={<SiteSetupPage />} />
           <Route path="s/:spaceId" element={<SpaceEditorPage />} />
+          <Route path="s/:spaceId/~/change-requests" element={<SpaceEditorPage />} />
+          <Route path="s/:spaceId/~/changes/:changeRequestId" element={<SpaceEditorPage />} />
+          <Route path="changes" element={<GlobalChangeRequestsPage />} />
+          <Route path="changes/:changeRequestId" element={<GlobalChangeRequestsPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
