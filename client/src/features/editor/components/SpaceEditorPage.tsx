@@ -3,52 +3,39 @@ import { useParams, useNavigate } from "react-router-dom"
 import { useAuthStore } from "../../auth/authStore"
 import { useSitesStore, type Page } from "../../sites-management/sitesStore"
 import { useEditorStore } from "../editorStore"
-import { useChangeRequestStore } from "../../change-requests/changeRequestStore"
-import ChangeRequestsDrawer from "../../change-requests/components/ChangeRequestsDrawer"
-import ChangeRequestReviewPane from "../../change-requests/components/ChangeRequestReviewPane"
 
 // Subcomponents
 import EditorSidebar from "./EditorSidebar"
 import EditorHeader from "./EditorHeader"
 import EditorCanvas from "./EditorCanvas"
-import RequestReviewModal from "../../change-requests/components/RequestReviewModal"
 import MergeConfirmModal from "../../change-requests/components/MergeConfirmModal"
 import { ArrowLeft } from "lucide-react"
 
 /**
  * SpaceEditorPage Component.
- * 
+ *
  * Purpose:
- * The central workspace orchestrator for document editing. It binds sidebar structures,
- * header control hubs, and main editor canvases into a Git-like branching editor layout.
- * 
+ * The central workspace orchestrator for document editing. Binds sidebar,
+ * header, and editor canvas. Always in editing mode — changes auto-save and
+ * are published via the Merge action.
+ *
  * State & Store Integrations:
- * - `useParams`: Extracts `:spaceId`, `:orgId`, and optional `:changeRequestId` (for review overlays) from the URL.
+ * - `useParams`: Extracts `:spaceId` and `:orgId` from the URL.
  * - `useAuthStore`: Retrieves the currently logged-in user profile.
  * - `useSitesStore`: Manages the currently selected `currentSpace` document structure.
  * - `useEditorStore`: Triggers the page content `updatePage` API action.
- * - `useChangeRequestStore`: Tracks Git-like branch selectors (`activeBranchId`), list of open change requests (`openChangeRequests`),
- *   and branch activation callbacks.
- * 
- * Git Branching Logic & Editing Modes:
- * - DocuSphere operates in two modes:
- *   1. Read-Only Mode (Main branch): When no change request branch is active. User cannot directly modify texts.
- *   2. Editing Mode (Branch mode): Triggered when an active change request is selected (`activeCR !== null`).
- *      Auto-save commits changes to that specific branch.
- * 
+ *
  * React Lifecycle Hooks (Effects):
- * 1. CR Fetch: Syncs the list of open change requests for the space.
- * 2. Space Sync: Refetches page trees when the active branch context toggles.
- * 3. Page Selection: Ensures a document is always active by default.
- * 4. State Sync: Populates the text area drafts (`editTitle`, `editContent`) when switching pages.
- * 5. Debounced Auto-save: Triggers `updatePage` API call 800ms after the user stops typing in Editing Mode.
+ * 1. Space Sync: Fetches space page tree on mount.
+ * 2. Page Selection: Ensures a document is always active by default.
+ * 3. State Sync: Populates draft buffers when switching pages.
+ * 4. Debounced Auto-save: Triggers `updatePage` API call 800ms after typing stops.
  */
 export default function SpaceEditorPage() {
   // Extract route parameters
-  const { spaceId, orgId, changeRequestId } = useParams<{
+  const { spaceId, orgId } = useParams<{
     spaceId: string
     orgId: string
-    changeRequestId: string
   }>()
   const navigate = useNavigate()
   const { user } = useAuthStore()
@@ -57,51 +44,26 @@ export default function SpaceEditorPage() {
   const { currentSpace, fetchSpace, isLoading } = useSitesStore()
   // Editor Store integration for page updating callbacks
   const { updatePage } = useEditorStore()
-  // Change Request Store integration for branching state controls
-  const {
-    selectedChangeRequestId,
-    openChangeRequests,
-    selectChangeRequest,
-    fetchOpenChangeRequests,
-  } = useChangeRequestStore()
 
   // Local UI States
   const [selectedPage, setSelectedPage] = useState<Page | null>(null)
-  const [activeSubTab, setActiveSubTab] = useState<"editor" | "preview" | "changes">("editor")
+  // Active view tab: editor (editable) or preview (read-only rendered)
+  const [activeTab, setActiveTab] = useState<"editor" | "preview">("editor")
   // Buffered text drafts for input forms (updates local state immediately, auto-saves to backend after debounce)
   const [editTitle, setEditTitle] = useState("")
   const [editContent, setEditContent] = useState("")
 
   // Modal Dialog states
   const [isMergeModalOpen, setIsMergeModalOpen] = useState(false)
-  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false)
-  const [notification, setNotification] = useState<string | null>(null)
 
-  // Sub-navigation tab inside the change request drawer
-  const [activeCRTab, setActiveCRTab] = useState<"overview" | "editor" | "changes" | "preview">("editor")
-
-  // Derived: Is the Git Change Request drawer open?
-  const isDrawerOpen = window.location.pathname.includes("~/change-requests")
-  // Derived: Active change request branch object
-  const activeCR = openChangeRequests.find((cr) => cr.id === selectedChangeRequestId) ?? null
-  // Derived: Editing mode flag
-  const isEditingMode = activeCR !== null
-
-  // Effect 1: Fetch list of open change requests on component mount or context changes
-  useEffect(() => {
-    if (spaceId && user) {
-      fetchOpenChangeRequests(spaceId, user.id)
-    }
-  }, [spaceId, user, fetchOpenChangeRequests])
-
-  // Effect 2: Refetch space page trees when spaceId, user, or active branch selector changes
+  // Effect 1: Fetch space page tree on mount or spaceId/user change
   useEffect(() => {
     if (spaceId && user) {
       fetchSpace(spaceId, user.id)
     }
-  }, [spaceId, user, selectedChangeRequestId, fetchSpace])
+  }, [spaceId, user, fetchSpace])
 
-  // Effect 3: Automatically select the first page of a space when space data first loads
+  // Effect 2: Automatically select the first page of a space when space data first loads
   useEffect(() => {
     if (currentSpace?.pages && currentSpace.pages.length > 0) {
       if (!selectedPage || !currentSpace.pages.some((p) => p.id === selectedPage.id)) {
@@ -116,17 +78,17 @@ export default function SpaceEditorPage() {
     }
   }, [currentSpace]) // eslint-disable-line
 
-  // Effect 4: Reset draft values in form controls when the active page or branch toggles
+  // Effect 3: Reset draft values in form controls when the active page changes
   useEffect(() => {
     if (selectedPage) {
       setEditTitle(selectedPage.title)
       setEditContent(selectedPage.content)
     }
-  }, [selectedPage?.id, selectedChangeRequestId]) // eslint-disable-line
+  }, [selectedPage?.id]) // eslint-disable-line
 
-  // Effect 5: Debounced Auto-save. Fires updatePage API requests 800ms after user pauses typing.
+  // Effect 4: Debounced Auto-save. Fires updatePage API requests 800ms after user pauses typing.
   useEffect(() => {
-    if (!isEditingMode || !selectedPage || !user) return
+    if (!selectedPage || !user) return
     // Skip if drafts match already committed version
     if (editTitle === selectedPage.title && editContent === selectedPage.content) return
 
@@ -140,18 +102,9 @@ export default function SpaceEditorPage() {
 
     // Clear timeout on draft changes to reset the debounce timer
     return () => clearTimeout(timer)
-  }, [editTitle, editContent, selectedPage?.id, isEditingMode, selectedChangeRequestId, user, updatePage])
-
-  /**
-   * Action: Renders temporary status alerts in the editor canvas.
-   */
-  const showNotification = (msg: string) => {
-    setNotification(msg)
-    setTimeout(() => setNotification(null), 3000)
-  }
+  }, [editTitle, editContent, selectedPage?.id, user, updatePage])
 
   const handleMergeEdits = () => setIsMergeModalOpen(true)
-  const handleRequestReview = () => setIsReviewModalOpen(true)
 
   // Loading Boundary state
   if (isLoading && !currentSpace) {
@@ -181,80 +134,52 @@ export default function SpaceEditorPage() {
     )
   }
 
-  // Resolve headers information
+  // Resolve header information
   const siteName = currentSpace.site?.name || "Docs"
   const spaceName = currentSpace.name || "Space"
 
   return (
     <div className="flex-1 flex w-full h-full text-[#f5f5f7] bg-[#0c0c0e] font-sans overflow-hidden relative">
 
-      {/* Change Requests Drawer Overlay: Slides in from the left to manage Git branches */}
-      {isDrawerOpen && (
-        <ChangeRequestsDrawer onClose={() => navigate(`/o/${orgId}/s/${spaceId}`)} />
-      )}
-
       {/* Editor Main Core Frame */}
       <div className="flex-1 flex flex-col h-full overflow-hidden">
 
-        {/* Sub-header Navigation Panel (Tab selectors and merge call-to-actions) */}
+        {/* Sub-header Navigation Panel */}
         <EditorHeader
           orgId={orgId}
           spaceId={spaceId!}
           siteName={siteName}
-          spaceName={spaceName}
-          isDrawerOpen={isDrawerOpen}
-          isEditingMode={isEditingMode}
-          activeCR={activeCR}
-          activeCRTab={activeCRTab}
-          setActiveCRTab={setActiveCRTab}
-          activeSubTab={activeSubTab as "editor" | "preview"}
-          setActiveSubTab={(t) => setActiveSubTab(t)}
-          selectChangeRequest={selectChangeRequest}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
           handleMergeEdits={handleMergeEdits}
-          handleRequestReview={handleRequestReview}
-          showNotification={showNotification}
         />
 
-        {/* Editor Layout Sidebar & Main Workspace Body */}
+        {/* Editor Layout: Sidebar & Main Workspace Body */}
         <div className="flex-1 flex w-full overflow-hidden">
 
           {/* Sidebar Component: Page Navigation Lists, Add Page Triggers */}
           <EditorSidebar
             spaceId={spaceId!}
             spaceName={spaceName}
-            isEditingMode={isEditingMode}
-            activeCRTitle={activeCR?.title}
             selectedPage={selectedPage}
             setSelectedPage={setSelectedPage}
             setEditTitle={setEditTitle}
             setEditContent={setEditContent}
-            showNotification={showNotification}
           />
 
-          {/* 
-            Main Document Canvas:
-            - If we are reviewing an open Change Request: Renders the ChangeRequestReviewPane.
-            - If we are editing/viewing standard pages: Renders the EditorCanvas.
-          */}
-          {changeRequestId ? (
-            <ChangeRequestReviewPane />
-          ) : (
-            <EditorCanvas
-              selectedPage={selectedPage}
-              activeSubTab={activeSubTab as "editor" | "preview"}
-              isEditingMode={isEditingMode}
-              activeCR={activeCR}
-              editTitle={editTitle}
-              setEditTitle={setEditTitle}
-              editContent={editContent}
-              setEditContent={setEditContent}
-
-            />
-          )}
+          {/* Main Document Canvas */}
+          <EditorCanvas
+            selectedPage={selectedPage}
+            activeTab={activeTab}
+            editTitle={editTitle}
+            setEditTitle={setEditTitle}
+            editContent={editContent}
+            setEditContent={setEditContent}
+          />
         </div>
       </div>
 
-      {/* Modal overlays */}
+      {/* Merge Modal overlay */}
       <MergeConfirmModal
         spaceId={spaceId!}
         isOpen={isMergeModalOpen}
@@ -263,14 +188,6 @@ export default function SpaceEditorPage() {
         editTitle={editTitle}
         editContent={editContent}
       />
-
-      <RequestReviewModal
-        spaceId={spaceId!}
-        isOpen={isReviewModalOpen}
-        onClose={() => setIsReviewModalOpen(false)}
-        showNotification={showNotification}
-      />
     </div>
   )
 }
-
