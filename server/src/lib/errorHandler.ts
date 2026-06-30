@@ -1,7 +1,23 @@
 import { FastifyRequest, FastifyReply } from "fastify"
 
+/**
+ * Global Error Handler Middleware.
+ * 
+ * Purpose:
+ * Intercepts all unhandled errors thrown inside the controller/service pipeline
+ * and normalizes them into structured JSON error payloads before responding to the frontend.
+ * 
+ * When it executes:
+ * Runs automatically as the final stage of the request lifecycle when any route
+ * handler throws an exception or calls reply.send(error).
+ * 
+ * Mappings:
+ * - Prisma P2002 -> HTTP 409 Conflict (e.g., trying to register an email already in use).
+ * - Prisma P2025 -> HTTP 404 Not Found (e.g., fetching a non-existent change request).
+ * - General -> Matches statusCode parameter, or defaults to 500 for safety.
+ */
 export function errorHandler(error: any, request: FastifyRequest, reply: FastifyReply) {
-  // Log the complete error
+  // Log the complete error trace to stdout using Fastify's logger
   request.log.error(error)
 
   // Handle Prisma Unique Constraint Violation (P2002)
@@ -13,7 +29,7 @@ export function errorHandler(error: any, request: FastifyRequest, reply: Fastify
     })
   }
 
-  // Handle other Prisma specific errors (e.g., records not found)
+  // Handle other Prisma specific errors (e.g., records not found - P2025)
   if (error.code === "P2025") {
     return reply.status(404).send({
       statusCode: 404,
@@ -32,3 +48,4 @@ export function errorHandler(error: any, request: FastifyRequest, reply: Fastify
     message: isServerErr ? "An internal server error occurred." : error.message
   })
 }
+

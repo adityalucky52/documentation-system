@@ -1,17 +1,27 @@
 import { create } from "zustand"
 
+/**
+ * Representation of a User object inside the client application.
+ */
 interface User {
   id: string
   email: string
   name: string | null
 }
 
+/**
+ * Representation of an Organization object inside the client application.
+ * Each site and space belongs to an organization.
+ */
 export interface Organization {
   id: string
   name: string
   userId: string
 }
 
+/**
+ * Definition of the Zustand authentication store's state and methods.
+ */
 interface AuthState {
   user: User | null
   organization: Organization | null
@@ -25,10 +35,14 @@ interface AuthState {
   fetchMyOrganization: () => Promise<Organization | null>
 }
 
+// REST API endpoint bases for authentication and organization actions
 const API_URL = "http://localhost:5001/api/auth"
 const ORG_API_URL = "http://localhost:5001/api/org"
 
-// Helper functions for manual persistence
+/**
+ * Helper: retrieves the authenticated user from browser localStorage (manual persistence).
+ * Catches parse errors to prevent application crashes when reading modified/invalid stored values.
+ */
 const getStoredUser = (): User | null => {
   if (typeof window === "undefined") return null
   const u = localStorage.getItem("user")
@@ -39,6 +53,9 @@ const getStoredUser = (): User | null => {
   }
 }
 
+/**
+ * Helper: retrieves the currently active organization from browser localStorage.
+ */
 const getStoredOrg = (): Organization | null => {
   if (typeof window === "undefined") return null
   const o = localStorage.getItem("organization")
@@ -49,12 +66,23 @@ const getStoredOrg = (): Organization | null => {
   }
 }
 
+/**
+ * Zustand hook `useAuthStore` to manage authenticating state globally.
+ * Triggers re-renders in components listening to auth states (e.g. DashboardLayout, LoginPage).
+ */
 export const useAuthStore = create<AuthState>((set, get) => ({
+  // Initialize state variables from manual localStorage caching
   user: getStoredUser(),
   organization: getStoredOrg(),
   isLoading: false,
   error: null,
 
+  /**
+   * authenticates a user using email and password.
+   * Sends a POST request to `${API_URL}/login`.
+   * On success: Updates state, stores user/organization in localStorage, returns true.
+   * On failure: Populates error state, returns false.
+   */
   login: async (email, password) => {
     set({ isLoading: true, error: null })
     try {
@@ -72,7 +100,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         throw new Error(data.error || "Failed to log in")
       }
 
-      // Persist values in localStorage
+      // Persist values in localStorage for session recovery
       localStorage.setItem("user", JSON.stringify(data.user))
       if (data.organization) {
         localStorage.setItem("organization", JSON.stringify(data.organization))
@@ -92,6 +120,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
+  /**
+   * Registers a new user.
+   * Sends a POST request to `${API_URL}/register`.
+   * On success: Caches user, clears organization state (needs organization setup), returns true.
+   * On failure: Populates error state, returns false.
+   */
   register: async (email, password, name) => {
     set({ isLoading: true, error: null })
     try {
@@ -120,16 +154,27 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
+  /**
+   * Logs out the user.
+   * Clears state and removes local storage cookies/items.
+   */
   logout: () => {
     localStorage.removeItem("user")
     localStorage.removeItem("organization")
     set({ user: null, organization: null })
   },
 
+  /**
+   * Utility action to clear error state messages (useful for resetting form notices on component transitions).
+   */
   clearError: () => {
     set({ error: null })
   },
 
+  /**
+   * Creates a new organization for the current user.
+   * API requires x-user-id custom header since backend identifies requests using it.
+   */
   createOrganization: async (name) => {
     const user = get().user
     if (!user) {
@@ -165,6 +210,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
+  /**
+   * Fetches the organization associated with the logged-in user.
+   * Returns null if no organization is configured, or details if it exists.
+   */
   fetchMyOrganization: async () => {
     const user = get().user
     if (!user) return null
@@ -195,3 +244,4 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   }
 }))
+

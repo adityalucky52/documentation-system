@@ -1,8 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider        = "prisma-client-js"
   output          = "../generated/prisma"
@@ -13,16 +11,35 @@ datasource db {
   provider = "postgresql"
 }
 
+/**
+ * Model: User
+ * Represents an authenticated author or team member in the system.
+ * 
+ * Features:
+ * - Credentials verification and session matching.
+ * - One-to-one organization ownership relationship.
+ * - Triggered by client pages: LoginPage, RegisterPage.
+ */
 model User {
   id           String        @id @default(uuid())
-  email        String        @unique
-  name         String?
-  password     String
-  organization Organization?
+  email        String        @unique // User identity email key
+  name         String?       // Friendly display name
+  password     String        // Bcrypt hashed credential
+  organization Organization? // Organization owned by this user
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 }
 
+/**
+ * Model: Organization
+ * A workspace container that groups documentation sites, sites setup configurations,
+ * and associated authors.
+ * 
+ * Relationships:
+ * - One User owner (UserId references User.id).
+ * - Has many Sites.
+ * - Triggered by: CreateOrganizationPage, DashboardLayout syncs.
+ */
 model Organization {
   id        String   @id
   name      String
@@ -33,17 +50,37 @@ model Organization {
   updatedAt DateTime @updatedAt
 }
 
+/**
+ * Model: Site
+ * A high-level documentation site (e.g., "Developer Portal").
+ * 
+ * Relationships:
+ * - Belongs to one Organization (organizationId references Organization.id).
+ * - Has many Spaces (sub-document sections).
+ * - Triggered by: CreateSiteModal, SiteSetupPage.
+ */
 model Site {
   id             String       @id
   name           String
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   spaces         Space[]
-  isSetup        Boolean      @default(false)
+  isSetup        Boolean      @default(false) // Toggle between template onboarding checks vs dashboard overview tabs
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 }
 
+/**
+ * Model: Space
+ * A sub-workspace section under a site (e.g., "API Docs" vs "User Guides").
+ * Acts as the logical repository for Git-style page branching operations.
+ * 
+ * Relationships:
+ * - Belongs to one Site (siteId references Site.id).
+ * - Has many pages (Page) representing the live master branch states.
+ * - Has many branches (Branch) and change requests (ChangeRequest).
+ * - Triggered by: SpaceEditorPage.
+ */
 model Space {
   id             String          @id
   name           String
@@ -56,6 +93,15 @@ model Space {
   updatedAt      DateTime        @updatedAt
 }
 
+/**
+ * Model: Page
+ * Represents the live/published master content of a documentation document.
+ * 
+ * Relationships:
+ * - Belongs to a Space (spaceId references Space.id).
+ * - Has many PageVersions representing current or past edits mapped to specific branches.
+ * - Triggered by: EditorCanvas, EditorSidebar.
+ */
 model Page {
   id        String        @id
   title     String
@@ -67,6 +113,14 @@ model Page {
   updatedAt DateTime      @updatedAt
 }
 
+/**
+ * Enum: ChangeRequestStatus
+ * Represents the lifecycle stages of a Change Request branch.
+ * - DRAFT: Edit isolates, only active inside editor context.
+ * - OPEN: Ready for review and comparisons.
+ * - MERGED: Merged into master Page, changes are published.
+ * - CLOSED: Archived.
+ */
 enum ChangeRequestStatus {
   DRAFT
   OPEN
@@ -74,6 +128,15 @@ enum ChangeRequestStatus {
   CLOSED
 }
 
+/**
+ * Model: Branch
+ * Isolated Git-style branch reference tracking a collection of document page modifications.
+ * 
+ * Relationships:
+ * - Belongs to one Space (spaceId references Space.id).
+ * - Has many PageVersions (isolated edits).
+ * - Referenced by ChangeRequest as source and target branch.
+ */
 model Branch {
   id                   String          @id
   name                 String          // e.g. "main", "change-request-123"
@@ -86,6 +149,15 @@ model Branch {
   updatedAt            DateTime        @updatedAt
 }
 
+/**
+ * Model: ChangeRequest
+ * Tracks pull-request-style reviews for merging a source Branch into a target Branch.
+ * 
+ * Relationships:
+ * - Belongs to a Space (spaceId references Space.id).
+ * - Has one source Branch (sourceBranchId) and one target Branch (targetBranchId).
+ * - Triggered by: ChangeRequestSwitcher, RequestReviewModal, MergeConfirmModal.
+ */
 model ChangeRequest {
   id             String              @id
   title          String
@@ -101,6 +173,15 @@ model ChangeRequest {
   updatedAt      DateTime            @updatedAt
 }
 
+/**
+ * Model: PageVersion
+ * Isolated content record for a Page inside a specific Branch.
+ * Ensures edits made on drafts do not override the live main Page content until merged.
+ * 
+ * Key Constraints:
+ * - Unique combination of pageId and branchId, guaranteeing one draft version per page per branch.
+ * - Triggered by: Editor autosaves, TipTap modifications.
+ */
 model PageVersion {
   id        String   @id @default(uuid())
   pageId    String
@@ -113,4 +194,5 @@ model PageVersion {
 
   @@unique([pageId, branchId])
 }
+
 

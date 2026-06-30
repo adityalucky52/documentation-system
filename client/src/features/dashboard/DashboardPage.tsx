@@ -9,24 +9,51 @@ import {
   ArrowRight
 } from "lucide-react"
 
+/**
+ * DashboardPage Component.
+ * 
+ * Purpose:
+ * Renders the organization's central home dashboard screen. Users see a listing
+ * of their recent documentation sites, quick action shortcuts, learning assets,
+ * and workspace integrations.
+ * 
+ * State & Store Integrations:
+ * - `useAuthStore`: Consumes `user` profile data to compute personalized greetings.
+ * - `useSitesStore`: Retrieves the array of user `sites` and uses `setCreateModalOpen`
+ *   to launch the creation drawer overlay.
+ * 
+ * Parameters (React Router):
+ * - `orgId`: Pulled from `/o/:orgId/...` route parameter using `useParams`.
+ *   This is essential to construct relative links for nested dashboard sites.
+ * 
+ * UI Interactions:
+ * - Clicking the "New" action button triggers `setCreateModalOpen(true)` in `useSitesStore`.
+ * - Clicking on recent sites navigates the user to `/o/:orgId/sites/:siteId`.
+ */
 export default function DashboardPage() {
+  // Pull authenticated user data from auth store
   const { user } = useAuthStore()
+  // Determine user's display name: name attribute -> prefix of email -> default fallback
   const userName = user?.name || user?.email?.split("@")[0] || "aditya"
+  
+  // Pull documentation sites and modal triggers from sites store
   const { sites, setCreateModalOpen } = useSitesStore()
+  
+  // Extract active organization ID from route params for navigation mapping
   const { orgId } = useParams<{ orgId: string }>()
 
   return (
     <div className="max-w-[1012px] w-full mx-auto px-8 py-10 flex flex-col gap-9 font-sans text-[#f5f5f7]">
-      {/* Welcome Title */}
+      {/* Welcome Title Greeting Banner */}
       <div>
         <h1 className="text-3xl font-semibold tracking-tight text-white leading-tight">
           Welcome back
         </h1>
       </div>
 
-      {/* Quick Action Cards */}
+      {/* Quick Action Cards Grid (New Site, Change Requests, Invites) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* New Card */}
+        {/* Action: Open "Create Site Modal" */}
         <button 
           onClick={() => setCreateModalOpen(true)}
           className="flex flex-col items-center justify-center gap-3 p-6 bg-[#161618] border border-[#222225] hover:border-[#323236] hover:bg-[#1a1a1c] rounded-xl transition-all cursor-pointer group w-full text-left"
@@ -37,7 +64,7 @@ export default function DashboardPage() {
           <span className="text-sm font-medium text-[#9a9a9f] group-hover:text-white transition-colors">New</span>
         </button>
 
-        {/* Change requests */}
+        {/* Action: View Change Requests (Placeholder handler) */}
         <button className="flex flex-col items-center justify-center gap-3 p-6 bg-[#161618] border border-[#222225] hover:border-[#323236] hover:bg-[#1a1a1c] rounded-xl transition-all cursor-pointer group">
           <div className="w-11 h-11 rounded-lg bg-[#222225] border border-[#2c2c30] flex items-center justify-center transition-colors">
             <GitBranch className="h-5 w-5 text-white" />
@@ -45,7 +72,7 @@ export default function DashboardPage() {
           <span className="text-sm font-medium text-[#9a9a9f] group-hover:text-white transition-colors">Change requests</span>
         </button>
 
-        {/* Invite */}
+        {/* Action: Invite Members (Placeholder handler) */}
         <button className="flex flex-col items-center justify-center gap-3 p-6 bg-[#161618] border border-[#222225] hover:border-[#323236] hover:bg-[#1a1a1c] rounded-xl transition-all cursor-pointer group">
           <div className="w-11 h-11 rounded-lg bg-[#222225] border border-[#2c2c30] flex items-center justify-center transition-colors">
             <div className="flex items-center gap-[1px]">
@@ -57,10 +84,11 @@ export default function DashboardPage() {
         </button>
       </div>
 
-      {/* Recents Section */}
+      {/* Recents Section: Displays documentation sites in this organization */}
       <div className="flex flex-col gap-3">
         <h2 className="text-xs font-semibold tracking-wider text-[#8e8e93] uppercase">Recents</h2>
         
+        {/* Conditional rendering: Shows empty state message if no sites exist, else iterates list */}
         {sites.length === 0 ? (
           <div className="p-8 text-center bg-[#161618] border border-[#222225] rounded-xl">
             <p className="text-sm text-[#8e8e93]">No recent sites. Create one to get started!</p>
@@ -103,15 +131,15 @@ export default function DashboardPage() {
         )}
       </div>
 
-
       {/* Bottom Grid: Dive Deeper & Integrations */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-2">
-        {/* Dive Deeper */}
+        
+        {/* Dive Deeper Panel (Webinars & Static Docs links) */}
         <div className="flex flex-col gap-3">
           <h2 className="text-xs font-semibold tracking-wider text-[#8e8e93] uppercase">Dive deeper</h2>
           
           <div className="flex flex-col gap-3">
-            {/* Webinars Card */}
+            {/* webinars Card */}
             <div className="p-4 bg-[#161618] border border-[#222225] hover:border-[#323236] rounded-xl flex items-center justify-between gap-4 transition-all">
               <div className="flex items-center gap-3.5">
                 <div className="w-10 h-10 rounded-lg bg-[#222225] border border-[#2c2c30] flex items-center justify-center text-[#8e8e93] shrink-0">
@@ -130,7 +158,7 @@ export default function DashboardPage() {
               </a>
             </div>
 
-            {/* Read the docs */}
+            {/* Read the docs Card */}
             <div className="p-4 bg-[#161618] border border-[#222225] hover:border-[#323236] rounded-xl flex items-center justify-between gap-4 transition-all">
               <div className="flex items-center gap-3.5">
                 <div className="w-10 h-10 rounded-lg bg-[#222225] border border-[#2c2c30] flex items-center justify-center text-[#8e8e93] shrink-0">
@@ -151,7 +179,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Extend with integrations */}
+        {/* Extend with Integrations Panel (Slack, GitHub Sync shortcuts) */}
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <h2 className="text-xs font-semibold tracking-wider text-[#8e8e93] uppercase">Extend with integrations</h2>
@@ -164,7 +192,7 @@ export default function DashboardPage() {
           <div className="flex flex-col gap-3">
             {/* Slack Integration */}
             <div className="p-4 bg-[#161618] border border-[#222225] hover:border-[#323236] hover:bg-[#1a1a1c] rounded-xl flex items-center gap-3.5 transition-all cursor-pointer group">
-              {/* Slack Colored Icon Grid Replica */}
+              {/* Slack logo drawing */}
               <div className="w-10 h-10 rounded-lg bg-[#222225] border border-[#2c2c30] flex items-center justify-center shrink-0">
                 <svg viewBox="0 0 24 24" className="h-5.5 w-5.5">
                   <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523 2.528 2.528 0 0 1-2.522-2.523 2.528 2.528 0 0 1 2.522-2.52h2.52v2.52zm1.261 0a2.528 2.528 0 0 1 2.52-2.52h5.043a2.528 2.528 0 0 1 2.522 2.52v5.043a2.528 2.528 0 0 1-2.522 2.52H8.824a2.528 2.528 0 0 1-2.52-2.52v-5.043zm2.52-6.341a2.528 2.528 0 0 1-2.52-2.522 2.528 2.528 0 0 1 2.52-2.52 2.528 2.528 0 0 1 2.522 2.52v2.52H8.824zm0 1.261a2.528 2.528 0 0 1 2.52 2.52v5.043a2.528 2.528 0 0 1-2.522 2.52H3.779a2.528 2.528 0 0 1-2.52-2.52V10.085a2.528 2.528 0 0 1 2.52-2.52h5.045zm6.341-2.52a2.528 2.528 0 0 1 2.522-2.522 2.528 2.528 0 0 1 2.52 2.52 2.528 2.528 0 0 1-2.52 2.52h-2.522v-2.518zm-1.261 0a2.528 2.528 0 0 1-2.522 2.52H6.301a2.528 2.528 0 0 1-2.52-2.52V3.779a2.528 2.528 0 0 1 2.52-2.52H11.38a2.528 2.528 0 0 1 2.522 2.52v5.045zm-2.52 6.341a2.528 2.528 0 0 1 2.522 2.52 2.528 2.528 0 0 1-2.522 2.522 2.528 2.528 0 0 1-2.52-2.522v-2.52h2.52zm0-1.261a2.528 2.528 0 0 1-2.522-2.52V6.301a2.528 2.528 0 0 1 2.52-2.52h5.043a2.528 2.528 0 0 1 2.52 2.52v5.043a2.528 2.528 0 0 1-2.52 2.52H13.882z" fill="#e01e5a"/>
@@ -188,3 +216,4 @@ export default function DashboardPage() {
     </div>
   )
 }
+

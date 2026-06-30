@@ -1,17 +1,32 @@
-import React from "react"
 import { Globe, ChevronRight } from "lucide-react"
 
+/**
+ * SiteOverviewCard Props.
+ * @param siteName - The name of the site, passed from parent `SiteSetupPage`.
+ * @param spaces - List of workspace spaces under this site, originates from the parent `Site` store object.
+ */
 interface SiteOverviewCardProps {
   siteName: string
   spaces: Array<{ id: string; name: string }> | undefined
 }
 
+/**
+ * SiteOverviewCard Component.
+ * 
+ * Purpose:
+ * Renders the left sidebar stats block in the Site Setup view.
+ * 
+ * Visual Layout:
+ * 1. Mini Web-Page Preview: Uses styled div bars to mock documentation wireframes.
+ * 2. Title & Status: Displays unpublished/public pill indicators.
+ * 3. Site structure: Lists all spaces inside the site.
+ */
 export default function SiteOverviewCard({ siteName, spaces }: SiteOverviewCardProps) {
   return (
     <div className="lg:col-span-4 flex flex-col gap-6 font-sans">
       <div className="bg-[#161618] border border-[#222225] rounded-xl overflow-hidden p-5 flex flex-col gap-6">
         
-        {/* Visual Preview Box */}
+        {/* Decorative page layout preview box */}
         <div className="aspect-[4/3] w-full bg-[#0c0c0e] border border-[#222225] rounded-lg p-3 flex flex-col gap-2 relative overflow-hidden">
           <div className="h-1.5 w-16 bg-[#3a3a3f] rounded"></div>
           <div className="h-1 w-24 bg-[#2c2c30] rounded"></div>
@@ -22,11 +37,12 @@ export default function SiteOverviewCard({ siteName, spaces }: SiteOverviewCardP
           </div>
         </div>
 
-        {/* Site Name and Status */}
+        {/* Site Name and Status Indicators */}
         <div className="flex flex-col gap-3">
           <h2 className="text-lg font-semibold text-white tracking-tight">{siteName}</h2>
           
           <div className="flex flex-wrap items-center gap-4 text-xs font-semibold">
+            {/* Hardcoded state status tags */}
             <div className="flex items-center gap-1.5 text-[#e0a800]">
               <span className="w-1.5 h-1.5 rounded-full bg-[#e0a800]"></span>
               <span>Unpublished</span>
@@ -40,7 +56,7 @@ export default function SiteOverviewCard({ siteName, spaces }: SiteOverviewCardP
 
         <div className="border-t border-[#1f1f23]"></div>
 
-        {/* Site structure spaces list */}
+        {/* Site structure spaces list mapper */}
         <div className="flex flex-col gap-2.5">
           <h4 className="text-[10px] font-bold text-[#8e8e93] uppercase tracking-wider">
             Site structure
@@ -77,3 +93,4 @@ export default function SiteOverviewCard({ siteName, spaces }: SiteOverviewCardP
     </div>
   )
 }
+

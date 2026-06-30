@@ -13,10 +13,23 @@ import { useChangeRequestStore } from "../changeRequestStore"
 import { useSitesStore } from "../../sites-management/sitesStore"
 import { useAuthStore } from "../../auth/authStore"
 
+/**
+ * ChangeRequestReviewPane Component.
+ * 
+ * Purpose:
+ * Renders the detail analysis panel for a selected Change Request branch.
+ * Displays:
+ * 1. Branch status metadata.
+ * 2. Visual side-by-side comparative text difference highlights (Original vs New).
+ * 3. Git commands shortcuts (Open draft inside editor workspace, promote drafts to review, or merge commits into main).
+ */
 export default function ChangeRequestReviewPane() {
+  // Extract route parameters
   const { orgId, changeRequestId } = useParams<{ orgId: string; changeRequestId: string }>()
   const navigate = useNavigate()
   const { user } = useAuthStore()
+
+  // Connect version control actions
   const {
     fetchChangeRequestDetail,
     mergeChangeRequest,
@@ -24,16 +37,22 @@ export default function ChangeRequestReviewPane() {
     fetchOpenChangeRequests,
     requestChangeRequestReview,
   } = useChangeRequestStore()
+  // Connect sites sync actions
   const { fetchSpace } = useSitesStore()
 
+  // Local UI States
   const [loading, setLoading] = useState(true)
   const [crData, setCrData] = useState<any>(null)
+  
+  // Merge dialog controllers
   const [isMergeModalOpen, setIsMergeModalOpen] = useState(false)
   const [isMerging, setIsMerging] = useState(false)
   const [mergeSuccess, setMergeSuccess] = useState(false)
+  
+  // Review submission indicator
   const [isRequesting, setIsRequesting] = useState(false)
 
-  // Fetch change request details on mount
+  // Effect 1: Query full diff content schemas on component mount or changeRequestId switches
   useEffect(() => {
     async function loadDetail() {
       if (!changeRequestId || !user) return
@@ -47,14 +66,16 @@ export default function ChangeRequestReviewPane() {
     loadDetail()
   }, [changeRequestId, user, fetchChangeRequestDetail])
 
-  // Handle requesting review for the draft change request directly
+  /**
+   * Action: Promotes the draft to OPEN review directly from details panel.
+   */
   const handleRequestReviewDirectly = async () => {
     if (!changeRequestId || !user) return
     setIsRequesting(true)
     const success = await requestChangeRequestReview(changeRequestId, user.id)
     setIsRequesting(false)
     if (success) {
-      // Reload details to show updated status
+      // Reload details to sync status updates
       const data = await fetchChangeRequestDetail(changeRequestId, user.id)
       if (data) setCrData(data)
       if (data?.changeRequest?.spaceId) {
@@ -63,24 +84,28 @@ export default function ChangeRequestReviewPane() {
     }
   }
 
-  // Handle merging the change request directly
   const handleMerge = () => {
     setIsMergeModalOpen(true)
   }
 
+  /**
+   * Action: Confirms merge commit back to main branch.
+   * Fires store actions, refreshes main page trees, and resets workspace selections.
+   */
   const confirmMergeAction = async () => {
     if (!changeRequestId || !user || !crData?.changeRequest?.spaceId) return
     setIsMerging(true)
-    const targetSpaceId = crData.changeRequest.spaceId
     const success = await mergeChangeRequest(changeRequestId, user.id)
     setIsMerging(false)
     if (success) {
       setMergeSuccess(true)
-      // Reload details to show merged state
+      // Reload details to display merged state status badges
       const data = await fetchChangeRequestDetail(changeRequestId, user.id)
       if (data) setCrData(data)
-      // Clear selected CR workspace since it's merged
+      
+      // Clear active selection since the branch is now successfully committed and resolved
       selectChangeRequest(null)
+      // Force space to reload its core page lists matching main branch revision
       await fetchSpace(crData.changeRequest.spaceId, user.id)
       if (crData?.changeRequest?.spaceId) {
         await fetchOpenChangeRequests(crData.changeRequest.spaceId, user.id)
@@ -88,18 +113,23 @@ export default function ChangeRequestReviewPane() {
     }
   }
 
-  // Open this CR in the editor by selecting it as the active workspace
+  /**
+   * Action: Toggles the editor's active branch workspace to this change request,
+   * loads page trees matching the branch, and redirects user to editor routes.
+   */
   const handleOpenInEditor = async () => {
     if (!crData || !user) return
     const targetSpaceId = crData.changeRequest.spaceId
     const crId = crData.changeRequest.id
-    // Load the open CRs so selectChangeRequest can find this one
+    // Pre-load open change requests to make sure the store is hydrated
     await fetchOpenChangeRequests(targetSpaceId, user.id)
     selectChangeRequest(crId)
+    // Fetch pages matching active source branch id instead of main
     await fetchSpace(targetSpaceId, user.id, crData.changeRequest.sourceBranchId)
     navigate(`/o/${orgId}/s/${targetSpaceId}`)
   }
 
+  // Loading boundary state
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full text-zinc-500 bg-[#121214]">
@@ -111,6 +141,7 @@ export default function ChangeRequestReviewPane() {
     )
   }
 
+  // Not Found boundary state
   if (!crData) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-zinc-500 bg-[#121214] gap-4">
@@ -119,19 +150,19 @@ export default function ChangeRequestReviewPane() {
     )
   }
 
+  // Extract change request properties and comparative diff arrays
   const { changeRequest, diffs } = crData
   const isMerged = changeRequest.status === "MERGED"
 
   return (
-    <div className="flex-1 flex flex-col bg-[#121214] overflow-y-auto relative p-8">
-      {/* Main Review Section wrapper */}
+    <div className="flex-1 flex flex-col bg-[#121214] overflow-y-auto relative p-8 font-sans">
       <div className="max-w-[840px] w-full mx-auto flex flex-col gap-6">
 
-        {/* Top Header Card */}
+        {/* Top Header Card: Title, Status Pills, and Action shortcuts */}
         <div className="border border-[#1f1f23] bg-[#0c0c0e]/80 rounded-xl p-6 flex flex-col gap-4">
           <div className="flex items-start justify-between">
             <div className="flex flex-col gap-1.5">
-              {/* Breadcrumbs */}
+              {/* Breadcrumbs path */}
               <div className="flex items-center gap-1.5 text-xs text-[#8e8e93]">
                 <span>Docs</span>
                 <span>/</span>
@@ -143,7 +174,7 @@ export default function ChangeRequestReviewPane() {
               <span className="text-2xl font-bold text-white tracking-tight mt-1 block">{changeRequest.title}</span>
             </div>
 
-            {/* Actions */}
+            {/* Action Buttons Panel */}
             <div className="flex items-center gap-2">
               {!isMerged && (
                 <button
@@ -176,7 +207,7 @@ export default function ChangeRequestReviewPane() {
             </div>
           </div>
 
-          {/* Metadata Row */}
+          {/* Metadata Row: Status badges, Reviewers additions (Mock handles) */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-4 border-t border-[#1f1f23] text-xs">
             <div className="flex flex-col gap-1.5">
               <span className="text-[#8e8e93] font-medium">Status</span>
@@ -212,7 +243,7 @@ export default function ChangeRequestReviewPane() {
           </div>
         </div>
 
-        {/* Changes Diff Panel */}
+        {/* Changes Diff Panel: Loops over differences and highlights comparative splits */}
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-bold text-white tracking-wide uppercase">Changes</h2>
@@ -225,15 +256,15 @@ export default function ChangeRequestReviewPane() {
                 key={diff.pageId}
                 className="border border-[#1f1f23] bg-[#0c0c0e] rounded-xl overflow-hidden"
               >
-                {/* Diff Item Header */}
+                {/* Diff Item Title Header */}
                 <div className="px-4 py-3 bg-[#0e0e11] border-b border-[#1f1f23] flex items-center gap-2">
                   <FileText className="w-4 h-4 text-[#8e8e93]" />
                   <span className="text-xs font-bold text-white">{diff.title || "Untitled Page"}</span>
                 </div>
 
-                {/* Diff Content Box */}
+                {/* Diff Comparison Canvas */}
                 <div className="p-4 flex flex-col gap-4 text-xs font-mono">
-                  {/* Title Comparison */}
+                  {/* Title Diff (Red line-through vs Emerald highlight) */}
                   {diff.originalTitle !== diff.title && (
                     <div className="flex flex-col gap-1.5">
                       <span className="text-[10px] font-bold text-[#8e8e93] uppercase tracking-wider font-sans">Title</span>
@@ -245,12 +276,12 @@ export default function ChangeRequestReviewPane() {
                     </div>
                   )}
 
-                  {/* Content Comparison */}
+                  {/* Body Content Diff (Columns split layout comparing Original vs New version) */}
                   <div className="flex flex-col gap-1.5">
                     <span className="text-[10px] font-bold text-[#8e8e93] uppercase tracking-wider font-sans">Content Difference</span>
                     <div className="border border-[#1f1f23] rounded-lg overflow-hidden grid grid-cols-1 md:grid-cols-2 text-[11px] leading-relaxed">
 
-                      {/* Original Version */}
+                      {/* Original Version Block */}
                       <div className="p-3 bg-red-950/5 border-r border-[#1f1f23] text-[#8e8e93]">
                         <div className="text-[9px] font-sans font-bold text-red-400 uppercase mb-2">Original State</div>
                         <div className="whitespace-pre-wrap">
@@ -258,7 +289,7 @@ export default function ChangeRequestReviewPane() {
                         </div>
                       </div>
 
-                      {/* New Version */}
+                      {/* Revised Version Block */}
                       <div className="p-3 bg-emerald-950/5 text-[#d1d1d6]">
                         <div className="text-[9px] font-sans font-bold text-emerald-400 uppercase mb-2">New State</div>
                         <div className="whitespace-pre-wrap">
@@ -277,7 +308,7 @@ export default function ChangeRequestReviewPane() {
 
       </div>
 
-      {/* GitBook-style Confirm Merge Modal */}
+      {/* Confirm Merge Modal overlay */}
       {isMergeModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-md bg-[#161618] border border-[#222225] rounded-xl p-6 shadow-2xl flex flex-col gap-4 animate-in zoom-in-95 duration-200">
@@ -291,6 +322,7 @@ export default function ChangeRequestReviewPane() {
               </div>
             </div>
 
+            {/* Success screen vs confirmation screen toggles */}
             {mergeSuccess ? (
               <div className="flex flex-col gap-4 py-2 animate-in fade-in">
                 <div className="flex items-center gap-2 text-emerald-400 text-xs font-semibold">
@@ -350,3 +382,4 @@ export default function ChangeRequestReviewPane() {
     </div>
   )
 }
+

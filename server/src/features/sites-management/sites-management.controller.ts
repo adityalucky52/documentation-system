@@ -2,9 +2,31 @@ import { FastifyRequest, FastifyReply } from "fastify"
 import { SitesManagementService } from "./sites-management.service.js"
 import { CreateSiteDto, SetupSiteDto } from "./sites-management.dto.js"
 
+/**
+ * SitesManagementController.
+ * 
+ * Purpose:
+ * Handles incoming HTTP requests for documentation sites, delegates database operations
+ * to the `SitesManagementService` layer, and formats JSON responses.
+ * 
+ * Triggered by:
+ * - Frontend interactions on the Dashboard page, Site Setup page, and Settings tab.
+ */
 export class SitesManagementController {
   private service = new SitesManagementService()
 
+  /**
+   * createSite Handler.
+   * 
+   * Purpose:
+   * Registers a new site structure under the user's organization.
+   * 
+   * Triggered by:
+   * - Frontend: CreateSiteModal (on clicking "Create site" form submit).
+   * 
+   * Request Lifecycle:
+   * POST /api/site --> Controller.createSite --> Service.createSite --> Repository.createSite --> Response (201 Created)
+   */
   createSite = async (
     request: FastifyRequest<{ Body: CreateSiteDto }>,
     reply: FastifyReply
@@ -19,6 +41,15 @@ export class SitesManagementController {
     }
   }
 
+  /**
+   * getSites Handler.
+   * 
+   * Purpose:
+   * Fetches all registered documentation sites in the user's organization.
+   * 
+   * Triggered by:
+   * - Frontend: DashboardPage (on mount).
+   */
   getSites = async (
     request: FastifyRequest,
     reply: FastifyReply
@@ -28,6 +59,15 @@ export class SitesManagementController {
     return reply.send({ sites })
   }
 
+  /**
+   * setupSite Handler.
+   * 
+   * Purpose:
+   * Configures a site's structure, creating default spaces/pages from a template.
+   * 
+   * Triggered by:
+   * - Frontend: SiteOnboardingOptions checklists.
+   */
   setupSite = async (
     request: FastifyRequest<{ Params: { siteId: string }; Body: SetupSiteDto }>,
     reply: FastifyReply
@@ -43,6 +83,15 @@ export class SitesManagementController {
     }
   }
 
+  /**
+   * deleteSite Handler.
+   * 
+   * Purpose:
+   * Deletes a site and all nested spaces/pages (Cascades in DB).
+   * 
+   * Triggered by:
+   * - Frontend: SiteSettingsPanel (on clicking "Delete Site" inside the danger zone).
+   */
   deleteSite = async (
     request: FastifyRequest<{ Params: { siteId: string } }>,
     reply: FastifyReply
@@ -56,3 +105,4 @@ export class SitesManagementController {
     }
   }
 }
+

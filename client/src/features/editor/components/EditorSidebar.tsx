@@ -4,6 +4,18 @@ import { useEditorStore } from "../editorStore"
 import { useSitesStore, type Page } from "../../sites-management/sitesStore"
 import { useAuthStore } from "../../auth/authStore"
 
+/**
+ * EditorSidebar Props.
+ * @param spaceId - Unique identifier of the current active workspace. Originates in `SpaceEditorPage`.
+ * @param spaceName - Name of the space. Originates in `SpaceEditorPage`.
+ * @param isEditingMode - Boolean indicating if a change request branch is active. Originates in `SpaceEditorPage`.
+ * @param activeCRTitle - Display name of the active Change Request branch. Originates in `SpaceEditorPage`.
+ * @param selectedPage - Current active page object. Originates in `SpaceEditorPage`.
+ * @param setSelectedPage - Callback modifier to select a page. Originates in `SpaceEditorPage`.
+ * @param setEditTitle - Sets title string buffer in parent. Originates in `SpaceEditorPage`.
+ * @param setEditContent - Sets content markdown buffer in parent. Originates in `SpaceEditorPage`.
+ * @param showNotification - Triggers toast notices. Originates in `SpaceEditorPage`.
+ */
 interface EditorSidebarProps {
   spaceId: string
   spaceName: string
@@ -16,6 +28,13 @@ interface EditorSidebarProps {
   showNotification: (msg: string) => void
 }
 
+/**
+ * EditorSidebar Component.
+ * 
+ * Purpose:
+ * Renders the page list navigation sidebar inside the editor canvas.
+ * Handles page searching/filtering and triggers new page creation when in Editing Mode.
+ */
 export default function EditorSidebar({
   spaceId,
   spaceName,
@@ -28,15 +47,23 @@ export default function EditorSidebar({
   showNotification,
 }: EditorSidebarProps) {
   const { user } = useAuthStore()
+  // Retrieve pages from current active space context
   const { currentSpace } = useSitesStore()
+  // Retrieve create action from editor store
   const { createPage } = useEditorStore()
 
+  // Search input state
   const [searchQuery, setSearchQuery] = useState("")
 
+  // Filter pages lists on query matches (case-insensitive)
   const filteredPages = (currentSpace?.pages || []).filter((page) =>
     page.title.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
+  /**
+   * Action: Triggers new page creation.
+   * Invokes `createPage` action, updates focus to the new page, resets draft buffers, and flashes alert.
+   */
   const handleAddNewPage = async () => {
     if (!spaceId || !user) return
     const newPage = await createPage(spaceId, "Untitled Page", user.id)
@@ -52,7 +79,7 @@ export default function EditorSidebar({
     <div className="w-[240px] border-r border-[#1f1f23] bg-[#0c0c0e] flex flex-col justify-between shrink-0 h-full">
       <div className="flex flex-col p-4 gap-4 overflow-y-auto">
         
-        {/* Inner tabs */}
+        {/* Inner Navigation Tabs (Mock library toggles) */}
         <div className="flex items-center gap-1 border-b border-[#1f1f23] pb-2 shrink-0">
           <button className="text-xs font-semibold text-white border-b-2 border-indigo-500 pb-1.5 px-1">
             Pages
@@ -62,7 +89,7 @@ export default function EditorSidebar({
           </button>
         </div>
 
-        {/* Search */}
+        {/* Dynamic Search Box */}
         <div className="relative shrink-0">
           <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-[#88888e]" />
           <input
@@ -74,10 +101,11 @@ export default function EditorSidebar({
           />
         </div>
 
-        {/* Pages */}
+        {/* Space Pages Navigation Tree */}
         <div className="flex flex-col gap-1">
           <div className="flex items-center justify-between text-[10px] font-bold text-[#8e8e93] uppercase tracking-wider px-1 mb-1">
             <span>Space Pages</span>
+            {/* Renders "Add Page" plus button only if we are in active editing branch */}
             {isEditingMode && (
               <button
                 onClick={handleAddNewPage}
@@ -89,6 +117,7 @@ export default function EditorSidebar({
             )}
           </div>
 
+          {/* Conditional rendering: Shows empty state alerts vs list mapped items */}
           {filteredPages.length === 0 ? (
             <span className="text-[11px] text-[#8e8e93] px-2 py-4 text-center border border-dashed border-[#222225] rounded-lg">
               No pages found
@@ -121,7 +150,7 @@ export default function EditorSidebar({
         </div>
       </div>
 
-      {/* Sidebar footer */}
+      {/* Sidebar Footer Details (Displays branch edit status or active space metadata) */}
       <div className="p-3 border-t border-[#1f1f23] text-[10px] text-[#8e8e93] bg-[#0e0e11] shrink-0">
         {isEditingMode ? (
           <span className="text-indigo-400 font-medium flex items-center gap-1">
@@ -137,3 +166,4 @@ export default function EditorSidebar({
     </div>
   )
 }
+

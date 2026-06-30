@@ -16,51 +16,86 @@ import {
   GitPullRequest
 } from "lucide-react"
 
+/**
+ * DashboardLayout Component.
+ * 
+ * Purpose:
+ * Acts as the structural shell layout for all authenticated pages inside the workspace.
+ * Features a sidebar navigation panel (left side) and a dynamic content area (right side)
+ * which renders matching child routes using React Router's `<Outlet />`.
+ * 
+ * Routing parameters:
+ * - `orgId`: Derived from path segment `/o/:orgId` in `useParams`. Represents the active organization context.
+ * 
+ * Store State & Actions:
+ * - `useAuthStore`: Monitors the user authentication profile, processes logout actions, and fetches organization metadata.
+ * - `useSitesStore`: Manages the lists of documentation sites and controls the visibility state of the `<CreateSiteModal />`.
+ * 
+ * React Lifecycle hooks:
+ * - Redirects unauthorized visitors back to `/login` if `user` state resolves to null.
+ * - Synchronization `useEffect` compares route parameter `:orgId` against current store cached organization.
+ *   Uses `lastFetchedOrgId` ref to prevent loops, fetching fresh metadata via `fetchMyOrganization` if there's a mismatch.
+ * - Submits a fetch trigger to retrieve documentation sites mapping to the current `user.id`.
+ */
 export default function DashboardLayout() {
   const { orgId } = useParams<{ orgId: string }>()
   const navigate = useNavigate()
+  
+  // Destructure active auth state and actions
   const { user, organization, fetchMyOrganization, logout, isLoading } = useAuthStore()
+  
+  // Reference tracker to prevent redundant organization API requests on route changes
   const lastFetchedOrgId = useRef<string | null>(null)
   
-  // Sites Store integration
+  // Destructure sites lists and modal trigger actions from the site store
   const { sites, fetchSites, isCreateModalOpen, setCreateModalOpen } = useSitesStore()
 
+  /**
+   * Action handler: Logs the user out of the application.
+   * Resets local auth store states and wipes site lists to prevent memory leaks or security exploits.
+   */
   const handleLogout = () => {
     logout()
     useSitesStore.setState({ sites: [] })
   }
 
+  // Redirect guard and Org metadata sync hook
   useEffect(() => {
-    // If user is not logged in, redirect to login
+    // 1. Verify user profile exists
     if (!user) {
       navigate("/login")
       return
     }
 
     if (isLoading) return
+    // Prevent fetching if organization matches previously fetched route parameters
     if (lastFetchedOrgId.current === orgId) return
 
-    // Fetch organization if it isn't set in store or if it doesn't match the route orgId
+    // 2. Fetch/update organization details if org context changed or is absent
     if (!organization || organization.id !== orgId) {
       lastFetchedOrgId.current = orgId || null
       fetchMyOrganization()
     }
   }, [user, orgId, organization, navigate, fetchMyOrganization, isLoading])
 
+  // Retrieve sites belonging to the logged-in user context
   useEffect(() => {
     if (user) {
       fetchSites(user.id)
     }
   }, [user, fetchSites])
 
+  // Resolve display name for organization header
   const orgName = organization?.name || "Workspace"
 
   return (
     <div className="flex h-screen w-full bg-[#0c0c0e] text-white font-sans overflow-hidden">
-      {/* LEFT SIDEBAR */}
+      
+      {/* LEFT SIDEBAR SECTION */}
       <aside className="w-[240px] flex flex-col justify-between border-r border-[#1f1f23] bg-[#0c0c0e] shrink-0">
         <div className="flex flex-col pt-3 px-3 gap-6">
-          {/* Org Selector & Search/Notify */}
+          
+          {/* Organization Selector, Search & Notification Panel */}
           <div className="flex items-center justify-between">
             <button className="flex items-center gap-1.5 hover:bg-[#1a1a1e] px-2 py-1.5 rounded-md text-sm font-medium transition-colors text-left truncate max-w-[140px]">
               <span className="truncate">{orgName}</span>
@@ -77,6 +112,7 @@ export default function DashboardLayout() {
             </div>
           </div>
 
+          {/* Primary Sidebar Navigation (Home, Global Change Requests) */}
           <nav className="flex flex-col gap-0.5">
             <Link 
               to={`/o/${orgId}/home`}
@@ -95,7 +131,7 @@ export default function DashboardLayout() {
             </Link>
           </nav>
 
-          {/* Docs sites Header / Sites List */}
+          {/* Documentation Sites Section */}
           <div className="flex flex-col gap-2 mt-2">
             <div className="flex items-center justify-between px-2.5">
               <button className="flex items-center gap-1 text-[11px] font-bold text-[#88888e] uppercase tracking-wider">
@@ -111,6 +147,7 @@ export default function DashboardLayout() {
               </button>
             </div>
 
+            {/* Conditional rendering: shows empty onboarding prompt if zero sites exist, else loops list */}
             {sites.length === 0 ? (
               <div className="px-2.5 py-2 bg-[#0e0e11] border border-[#1f1f23] rounded-md mx-0.5">
                 <p className="text-xs text-[#88888e] leading-relaxed">
@@ -121,7 +158,7 @@ export default function DashboardLayout() {
               <div className="flex flex-col gap-1.5 max-h-[320px] overflow-y-auto px-1">
                 {sites.map((site) => (
                   <div key={site.id} className="flex flex-col gap-0.5">
-                    {/* Parent Site Link */}
+                    {/* Parent Site link (redirects to setup page) */}
                     <Link 
                       to={`/o/${orgId}/sites/${site.id}`}
                       className="flex items-center gap-2.5 hover:bg-[#1a1a1e] px-2.5 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer group text-[#8e8e93] hover:text-white"
@@ -141,7 +178,7 @@ export default function DashboardLayout() {
                       <span className="truncate text-white/90 group-hover:text-white transition-colors">{site.name}</span>
                     </Link>
 
-                    {/* Nested Spaces */}
+                    {/* Sub-spaces (Git-like branches/spaces inside site context) */}
                     {site.isSetup && site.spaces && site.spaces.map((space) => (
                       <Link 
                         to={`/o/${orgId}/s/${space.id}`}
@@ -171,7 +208,7 @@ export default function DashboardLayout() {
           </div>
         </div>
 
-        {/* Sidebar Footer */}
+        {/* Sidebar Footer Operations (Settings, Help, Logout triggers) */}
         <div className="flex items-center gap-0.5 p-3 border-t border-[#1f1f23] w-full justify-between">
           <div className="flex items-center gap-0.5">
             <button title="Help" className="p-1.5 hover:bg-[#1a1a1e] rounded-md text-[#88888e] hover:text-white transition-colors">
@@ -194,12 +231,12 @@ export default function DashboardLayout() {
         </div>
       </aside>
 
-      {/* MAIN CONTENT AREA */}
+      {/* DYNAMIC CONTENT OUTLET PANEL */}
       <main className="flex-1 bg-[#121214] overflow-y-auto flex flex-col">
         <Outlet />
       </main>
 
-      {/* CREATE SITE MODAL */}
+      {/* CREATE SITE DIALOG POPUP */}
       <CreateSiteModal 
         isOpen={isCreateModalOpen} 
         onClose={() => setCreateModalOpen(false)} 
@@ -207,4 +244,5 @@ export default function DashboardLayout() {
     </div>
   )
 }
+
 

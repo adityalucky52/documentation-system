@@ -1,8 +1,15 @@
 import { useState, useEffect } from "react"
-import { X, CheckCircle, GitPullRequest, Plus } from "lucide-react"
+import { X, CheckCircle, Plus } from "lucide-react"
 import { useChangeRequestStore } from "../changeRequestStore"
 import { useAuthStore } from "../../auth/authStore"
 
+/**
+ * RequestReviewModal Props.
+ * @param spaceId - Unique active space identifier. Originates in `SpaceEditorPage`.
+ * @param isOpen - Modal visibility flag. Originates in `SpaceEditorPage`.
+ * @param onClose - Modal dismissal callback. Originates in `SpaceEditorPage`.
+ * @param showNotification - Triggers status notice flashes. Originates in `SpaceEditorPage`.
+ */
 interface RequestReviewModalProps {
   spaceId: string
   isOpen: boolean
@@ -10,6 +17,14 @@ interface RequestReviewModalProps {
   showNotification: (msg: string) => void
 }
 
+/**
+ * RequestReviewModal Component.
+ * 
+ * Purpose:
+ * Renders the review request dialog allowing authors to promote their branches
+ * from "DRAFT" to "OPEN" (ready for peer review).
+ * Provides inputs for review titles and descriptions.
+ */
 export default function RequestReviewModal({
   spaceId,
   isOpen,
@@ -17,6 +32,7 @@ export default function RequestReviewModal({
   showNotification,
 }: RequestReviewModalProps) {
   const { user } = useAuthStore()
+  // Connect change requests version control stores
   const {
     selectedChangeRequestId,
     openChangeRequests,
@@ -24,13 +40,16 @@ export default function RequestReviewModal({
     fetchOpenChangeRequests,
   } = useChangeRequestStore()
 
+  // Derived: Current active change request
   const activeCR = openChangeRequests.find((cr) => cr.id === selectedChangeRequestId) ?? null
 
+  // Local Form States
   const [reviewTitle, setReviewTitle] = useState("")
   const [reviewDescription, setReviewDescription] = useState("")
   const [isReviewing, setIsReviewing] = useState(false)
   const [reviewSuccess, setReviewSuccess] = useState(false)
 
+  // Effect 1: Synchronize form values with active change request data when modal toggles open
   useEffect(() => {
     if (isOpen && activeCR) {
       setReviewTitle(activeCR.title)
@@ -39,8 +58,13 @@ export default function RequestReviewModal({
     }
   }, [isOpen, activeCR])
 
+  // Early return: Render nothing if modal flag is closed
   if (!isOpen) return null
 
+  /**
+   * Action: Submits review request status change to backend.
+   * On success, re-fetches open branches list and updates visual indicators.
+   */
   const confirmRequestReviewAction = async () => {
     if (!activeCR || !user || !spaceId) return
     setIsReviewing(true)
@@ -48,6 +72,7 @@ export default function RequestReviewModal({
     setIsReviewing(false)
     if (success) {
       setReviewSuccess(true)
+      // Refetch space branches to synchronize status updates on editor components
       await fetchOpenChangeRequests(spaceId, user.id)
     }
   }
@@ -55,8 +80,8 @@ export default function RequestReviewModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
       <div className="w-full max-w-lg bg-[#161618] border border-[#222225] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
-        
-        {/* Header */}
+
+        {/* Modal Header */}
         <div className="flex items-start justify-between px-6 pt-6 pb-4">
           <div className="flex flex-col gap-1">
             <h2 className="text-lg font-bold text-white tracking-tight">Request review</h2>
@@ -72,6 +97,7 @@ export default function RequestReviewModal({
           </button>
         </div>
 
+        {/* Success Template vs Input Form Panels */}
         {reviewSuccess ? (
           <div className="px-6 pb-6 flex flex-col gap-4 animate-in fade-in">
             <div className="flex items-center gap-2.5 bg-emerald-950/30 border border-emerald-500/20 rounded-xl px-4 py-3">
@@ -93,8 +119,8 @@ export default function RequestReviewModal({
         ) : (
           <div className="flex flex-col">
             <div className="px-6 pb-6 flex flex-col gap-5">
-              
-              {/* Title field */}
+
+              {/* Title input field */}
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-bold text-white">Add a title</label>
                 <input
@@ -109,7 +135,7 @@ export default function RequestReviewModal({
                 </p>
               </div>
 
-              {/* Description field */}
+              {/* Description textarea */}
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-bold text-white">Describe your changes</label>
                 <div className="border border-[#2c2c30] focus-within:border-indigo-500/60 rounded-lg overflow-hidden transition-colors bg-[#0e0e11]">
@@ -148,7 +174,7 @@ export default function RequestReviewModal({
                 </div>
               </div>
 
-              {/* Reviewers section */}
+              {/* Reviewers Selection Panel (Mock options) */}
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-bold text-white">Reviewers</span>
@@ -168,7 +194,7 @@ export default function RequestReviewModal({
 
             </div>
 
-            {/* Footer */}
+            {/* Footer Modal controls */}
             <div className="flex items-center justify-end gap-2.5 px-6 py-4 border-t border-[#1f1f23] bg-[#0e0e11]">
               <button
                 onClick={onClose}
@@ -197,3 +223,4 @@ export default function RequestReviewModal({
     </div>
   )
 }
+

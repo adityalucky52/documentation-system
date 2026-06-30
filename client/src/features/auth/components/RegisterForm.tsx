@@ -5,6 +5,10 @@ import { Input } from "@/components/ui/input"
 import { Loader2, ArrowLeft } from "lucide-react"
 import { useAuthStore } from "../authStore"
 
+/**
+ * GitBookLogo SVG Component.
+ * Pure visual component representing the branding logo (three slanted gray/black blocks).
+ */
 const GitBookLogo = () => (
   <div className="flex flex-col gap-[2px] items-start justify-center">
     <div className="w-[18px] h-[7px] bg-[#cfcfd3] rounded-[2px] transform skew-x-[-15deg]"></div>
@@ -13,6 +17,10 @@ const GitBookLogo = () => (
   </div>
 )
 
+/**
+ * GithubIcon SVG Component.
+ * Displays GitHub's octocat silhouette, used for the OAuth signup option.
+ */
 const GithubIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     viewBox="0 0 24 24"
@@ -23,6 +31,10 @@ const GithubIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 )
 
+/**
+ * GoogleIcon SVG Component.
+ * Displays Google's colorful logo icon for social signup options.
+ */
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     viewBox="0 0 24 24"
@@ -49,23 +61,48 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 )
 
+/**
+ * RegisterForm Component.
+ * Enables new users to create accounts in the application using a two-step signup wizard:
+ * 1. Step 1 ('email'): Accepts email addresses and options for OAuth providers.
+ * 2. Step 2 ('details'): Accepts the user's name, password, and password confirmation.
+ * 
+ * Custom Store Dependencies:
+ * - `useAuthStore`: Retrieves `register` (API POST registration), `isLoading` (submitting states),
+ *   `error` (API response error message strings), and `clearError` (resets form errors).
+ * 
+ * Routing Flow:
+ * - Navigates directly to `/create-organization` onboarding layout since new accounts do not
+ *   have any organization link configured upon registration.
+ */
 export default function RegisterForm() {
   const navigate = useNavigate()
+  
+  // Controls the current active step in the wizard
   const [step, setStep] = useState<'email' | 'details'>('email')
+  
+  // Controlled inputs state hooks
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
+  
+  // Internal UI password-matching validation error (doesn't hit backend)
   const [validationError, setValidationError] = useState("")
   
+  // Destructures Zustand auth state
   const { register, isLoading, error, clearError } = useAuthStore()
 
-  // Clear errors when changing steps or navigating
+  // Reset errors when user toggles between the email and details form layouts
   useEffect(() => {
     clearError()
     setValidationError("")
   }, [step, clearError])
 
+  /**
+   * Handler for Step 1: Email Form Submission.
+   * Prevents standard submit postback, updates step state to request name/password.
+   */
   const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (email) {
@@ -73,11 +110,17 @@ export default function RegisterForm() {
     }
   }
 
+  /**
+   * Handler for Step 2: Details Form Submission.
+   * Compares the password and confirmPassword fields, raises error if mismatched.
+   * Executes registration call via Zustand.
+   */
   const handleDetailsSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setValidationError("")
     clearError()
     
+    // UI Validation: Verify passwords match
     if (password !== confirmPassword) {
       setValidationError("Passwords do not match")
       return
@@ -85,13 +128,14 @@ export default function RegisterForm() {
 
     const success = await register(email, password, name)
     if (success) {
+      // Redirect to organization setup page upon successful user creation
       navigate("/create-organization")
     }
   }
 
   return (
     <div className="w-full max-w-[420px] flex flex-col gap-9 px-4 sm:px-6">
-      {/* GitBook Logo */}
+      {/* Visual branding logo */}
       <div className="flex items-center gap-2">
         <GitBookLogo />
       </div>
@@ -105,7 +149,7 @@ export default function RegisterForm() {
       <div className="flex flex-col gap-5">
         {step === 'email' ? (
           <>
-            {/* Social Authentication buttons */}
+            {/* Social Authentication buttons (Mock integrations) */}
             <div className="grid grid-cols-2 gap-3">
               <Button variant="outline" className="w-full h-10 gap-2 border-[#26262b] bg-[#121214] hover:bg-[#1b1b1f] hover:text-white text-[#d4d4d8] font-medium text-xs rounded-lg transition-colors">
                 <GithubIcon className="size-4 text-[#d4d4d8]" />
@@ -126,6 +170,7 @@ export default function RegisterForm() {
               </span>
             </div>
 
+            {/* Email input step form */}
             <form onSubmit={handleEmailSubmit} className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
                 <Input
@@ -148,9 +193,10 @@ export default function RegisterForm() {
             </form>
           </>
         ) : (
+          /* User details input step form */
           <form onSubmit={handleDetailsSubmit} className="flex flex-col gap-4">
             <div className="flex flex-col gap-3">
-              {/* Back to email link */}
+              {/* Return link to Step 1 showing active email */}
               <div className="flex items-center justify-between text-xs text-[#71717a]">
                 <button
                   type="button"
@@ -193,6 +239,7 @@ export default function RegisterForm() {
                 className="h-10 bg-[#0e0e10] border-[#26262b] text-white placeholder-[#71717a] focus-visible:border-white focus-visible:ring-0 rounded-lg text-sm transition-colors"
               />
 
+              {/* Renders validation mismatch warnings and backend API messages */}
               {(validationError || error) && (
                 <span className="text-xs text-rose-500 font-semibold">
                   {validationError || error}
@@ -233,3 +280,4 @@ export default function RegisterForm() {
     </div>
   )
 }
+

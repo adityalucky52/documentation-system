@@ -1,6 +1,16 @@
 import { prisma } from "../../lib/prisma.js"
 
+/**
+ * EditorRepository.
+ * 
+ * Purpose:
+ * Encapsulates database operations for pages, spaces, and page versions.
+ * Interacts with: `Space`, `Page`, and `PageVersion` tables.
+ */
 export class EditorRepository {
+  /**
+   * Reads Space table to retrieve a Space and its parent Site.
+   */
   async findSpaceById(spaceId: string) {
     return prisma.space.findUnique({
       where: { id: spaceId },
@@ -10,6 +20,9 @@ export class EditorRepository {
     })
   }
 
+  /**
+   * Reads PageVersion table to retrieve draft edits for a branch.
+   */
   async findPageVersionsByBranchId(branchId: string) {
     return prisma.pageVersion.findMany({
       where: { branchId },
@@ -17,6 +30,9 @@ export class EditorRepository {
     })
   }
 
+  /**
+   * Reads Page table to retrieve live page versions.
+   */
   async findPagesBySpaceId(spaceId: string) {
     return prisma.page.findMany({
       where: { spaceId },
@@ -24,6 +40,9 @@ export class EditorRepository {
     })
   }
 
+  /**
+   * Writes a new Page record.
+   */
   async createPage(id: string, title: string, content: string, spaceId: string) {
     return prisma.page.create({
       data: {
@@ -35,6 +54,10 @@ export class EditorRepository {
     })
   }
 
+  /**
+   * Writes or Updates a draft page version in PageVersion table.
+   * Matches on the composite unique constraint `@@unique([pageId, branchId])`.
+   */
   async upsertPageVersion(pageId: string, branchId: string, title: string, content: string) {
     return prisma.pageVersion.upsert({
       where: {
@@ -56,12 +79,18 @@ export class EditorRepository {
     })
   }
 
+  /**
+   * Reads Page table matching pageId.
+   */
   async findPageById(pageId: string) {
     return prisma.page.findUnique({
       where: { id: pageId }
     })
   }
 
+  /**
+   * Updates a live Page record.
+   */
   async updatePage(pageId: string, title: string, content: string) {
     return prisma.page.update({
       where: { id: pageId },
@@ -72,3 +101,4 @@ export class EditorRepository {
     })
   }
 }
+

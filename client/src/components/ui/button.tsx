@@ -4,6 +4,11 @@ import { Slot } from "radix-ui"
 
 import { cn } from "@/lib/utils"
 
+/**
+ * Define styles for buttons using `class-variance-authority` (cva).
+ * This establishes consistent button styles with multiple variants (default, outline, ghost, etc.)
+ * and sizes (default, xs, sm, lg, icon).
+ */
 const buttonVariants = cva(
   "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
@@ -41,6 +46,16 @@ const buttonVariants = cva(
   }
 )
 
+/**
+ * Reusable Button Component.
+ * 
+ * Props:
+ * @param className - Optional additional CSS classes passed from parent to customize styling.
+ * @param variant - Style variant enum (e.g. outline, ghost, destructive, link) passed from parent.
+ * @param size - Sizing variant enum (xs, sm, default, lg, icon) passed from parent.
+ * @param asChild - If true, delegates rendering to the direct child component using Radix's Slot, preserving all event handlers and styling.
+ * @param ...props - Standard HTML button attributes (disabled, onClick, type, etc.) passed from parent.
+ */
 function Button({
   className,
   variant = "default",
@@ -51,6 +66,7 @@ function Button({
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean
   }) {
+  // If asChild is true, use Slot.Root to render the child element with button behaviors and styles merged, otherwise render a normal button element.
   const Comp = asChild ? Slot.Root : "button"
 
   return (
@@ -65,3 +81,4 @@ function Button({
 }
 
 export { Button, buttonVariants }
+

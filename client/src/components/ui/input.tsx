@@ -2,6 +2,16 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
+/**
+ * Reusable Input component.
+ * Wraps standard HTML input element, applying default styling, transitions,
+ * borders, focuses, and custom error treatments (aria-invalid).
+ * 
+ * Props:
+ * @param className - Optional CSS class overrides passed from the parent.
+ * @param type - Input type (e.g. text, password, email, file, number) passed from the parent.
+ * @param ...props - All other standard input parameters (value, onChange, placeholder, disabled, etc.).
+ */
 function Input({ className, type, ...props }: React.ComponentProps<"input">) {
   return (
     <input
@@ -17,3 +27,4 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
 }
 
 export { Input }
+

@@ -2,6 +2,10 @@ import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { BookOpen, ArrowRight, Star, CheckCircle } from "lucide-react"
 
+/**
+ * GithubIcon SVG Component.
+ * Displays GitHub's logo as a clean outline shape using Lucide stroke style properties.
+ */
 const GithubIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     viewBox="0 0 24 24"
@@ -17,16 +21,30 @@ const GithubIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 )
 
+/**
+ * LandingPage Component.
+ * 
+ * Purpose:
+ * Renders the introductory landing page of DocuSphere.
+ * Provides public links for logging in or signing up.
+ * 
+ * Sub-layouts:
+ * 1. Navigation Header: Branding title, mock menus, and link buttons to `/login` and `/register`.
+ * 2. Hero Section: Catchy slogan, description, call-to-actions, and list of platform perks.
+ *    Incorporates a soft blurred background glow overlay using absolute positioning and high tailwind blurs.
+ * 3. Footer: Simple copyright note displaying the current dynamic year.
+ */
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 flex flex-col">
-      {/* Header */}
+      {/* Navigation Header */}
       <header className="border-b border-zinc-200 dark:border-zinc-800 px-6 py-4 flex items-center justify-between sticky top-0 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md z-50">
         <div className="flex items-center gap-2">
           <BookOpen className="size-6 text-emerald-500" />
           <span className="font-heading text-lg font-bold tracking-tight">DocuSphere</span>
         </div>
         
+        {/* Navigation items (Mock links) */}
         <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-zinc-600 dark:text-zinc-400">
           <a href="#" className="hover:text-zinc-900 dark:hover:text-zinc-100">Features</a>
           <a href="#" className="hover:text-zinc-900 dark:hover:text-zinc-100">Templates</a>
@@ -34,6 +52,7 @@ export default function LandingPage() {
           <a href="#" className="hover:text-zinc-900 dark:hover:text-zinc-100">Changelog</a>
         </nav>
 
+        {/* Auth entry links */}
         <div className="flex items-center gap-3">
           <Link to="/login">
             <Button variant="ghost" size="sm">Sign in</Button>
@@ -46,10 +65,11 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <main className="flex-1 flex flex-col justify-center items-center text-center px-6 py-20 lg:py-32 relative overflow-hidden">
-        {/* Glow Effects */}
+        {/* Decorative backdrop light spot */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-emerald-500/10 dark:bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none" />
         
         <div className="max-w-3xl flex flex-col gap-6 relative z-10">
+          {/* Release version pill banner */}
           <div className="inline-flex items-center gap-2 self-center rounded-full bg-emerald-500/10 px-3.5 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
             <Star className="size-3.5 fill-current" />
             <span>DocuSphere 2.0 is now live</span>
@@ -63,6 +83,7 @@ export default function LandingPage() {
             DocuSphere is the modern documentation platform where teams write, collaborate, and share technical documentation seamlessly.
           </p>
 
+          {/* Action buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-4">
             <Link to="/register">
               <Button size="lg" className="h-12 px-6 bg-emerald-600 hover:bg-emerald-500 text-white text-base font-semibold gap-2 shadow-lg shadow-emerald-500/20">
@@ -76,7 +97,7 @@ export default function LandingPage() {
             </Button>
           </div>
 
-          {/* Quick specs checklist */}
+          {/* Feature highlights checklist */}
           <div className="flex flex-wrap justify-center items-center gap-6 mt-12 text-sm text-zinc-500 dark:text-zinc-400">
             <div className="flex items-center gap-1.5">
               <CheckCircle className="size-4 text-emerald-500" />
@@ -94,10 +115,11 @@ export default function LandingPage() {
         </div>
       </main>
 
-      {/* Footer */}
+      {/* Footer copyright */}
       <footer className="border-t border-zinc-200 dark:border-zinc-800 py-6 text-center text-xs text-zinc-500 dark:text-zinc-400">
         <p>&copy; {new Date().getFullYear()} DocuSphere. Built using React, TypeScript, Tailwind, and shadcn/ui.</p>
       </footer>
     </div>
   )
 }
+

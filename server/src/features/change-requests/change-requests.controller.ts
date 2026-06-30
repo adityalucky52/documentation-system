@@ -1,9 +1,26 @@
 import { FastifyRequest, FastifyReply } from "fastify"
 import { ChangeRequestsService } from "./change-requests.service.js"
 
+/**
+ * ChangeRequestsController.
+ * 
+ * Purpose:
+ * Coordinates Git-like version control actions for documentation changes.
+ * Acts as the middleware coordinator handling branch creation, status reviews, comparative diff requests,
+ * and merge pipelines.
+ */
 export class ChangeRequestsController {
   private service = new ChangeRequestsService()
 
+  /**
+   * createChangeRequest Handler.
+   * 
+   * Purpose:
+   * Initializes a new workspace edit branch and registers it as a draft change request.
+   * 
+   * Triggered by:
+   * - Frontend: ChangeRequestSwitcher footer (on clicking "Create" in the new branch form).
+   */
   createChangeRequest = async (
     request: FastifyRequest<{ Params: { spaceId: string }; Body: { title: string } }>,
     reply: FastifyReply
@@ -19,6 +36,15 @@ export class ChangeRequestsController {
     }
   }
 
+  /**
+   * getChangeRequests Handler.
+   * 
+   * Purpose:
+   * Lists the change requests associated with a Space, filtered by status.
+   * 
+   * Triggered by:
+   * - Frontend: ChangeRequestsDrawer sliding menu.
+   */
   getChangeRequests = async (
     request: FastifyRequest<{ Params: { spaceId: string }; Querystring: { status?: string } }>,
     reply: FastifyReply
@@ -29,6 +55,15 @@ export class ChangeRequestsController {
     return reply.send(changeRequests)
   }
 
+  /**
+   * getChangeRequestDetail Handler.
+   * 
+   * Purpose:
+   * Retrieves change request details, including a side-by-side comparison of modified page versions.
+   * 
+   * Triggered by:
+   * - Frontend: ChangeRequestReviewPane.
+   */
   getChangeRequestDetail = async (
     request: FastifyRequest<{ Params: { changeRequestId: string } }>,
     reply: FastifyReply
@@ -42,6 +77,16 @@ export class ChangeRequestsController {
     }
   }
 
+  /**
+   * mergeChangeRequest Handler.
+   * 
+   * Purpose:
+   * Merges all draft page modifications from a branch back into the main live pages,
+   * then updates the change request status to MERGED.
+   * 
+   * Triggered by:
+   * - Frontend: MergeConfirmModal, ChangeRequestReviewPane ("Confirm merge" triggers).
+   */
   mergeChangeRequest = async (
     request: FastifyRequest<{ Params: { changeRequestId: string } }>,
     reply: FastifyReply
@@ -56,6 +101,15 @@ export class ChangeRequestsController {
     }
   }
 
+  /**
+   * getOrgChangeRequests Handler.
+   * 
+   * Purpose:
+   * Lists all change requests across all sites in an organization.
+   * 
+   * Triggered by:
+   * - Frontend: GlobalChangeRequestsPage dashboard feed.
+   */
   getOrgChangeRequests = async (
     request: FastifyRequest<{ Params: { orgId: string }; Querystring: { status?: string } }>,
     reply: FastifyReply
@@ -66,6 +120,15 @@ export class ChangeRequestsController {
     return reply.send(changeRequests)
   }
 
+  /**
+   * requestReview Handler.
+   * 
+   * Purpose:
+   * Promotes a draft change request to the OPEN review stage (ready for merge).
+   * 
+   * Triggered by:
+   * - Frontend: RequestReviewModal, ChangeRequestReviewPane ("Request review" triggers).
+   */
   requestReview = async (
     request: FastifyRequest<{ Params: { changeRequestId: string } }>,
     reply: FastifyReply
@@ -80,3 +143,4 @@ export class ChangeRequestsController {
     }
   }
 }
+

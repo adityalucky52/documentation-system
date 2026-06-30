@@ -2,30 +2,55 @@ import React, { useState } from "react"
 import { Upload, X } from "lucide-react"
 import { parseMarkdownToHtml } from "../../../utils/markdownParser"
 
+/**
+ * ImportFilesModal Props.
+ * @param isOpen - Controls modal container render visibility. Originates in `SiteSetupPage`.
+ * @param onClose - Callback to close the modal. Originates in `SiteSetupPage`.
+ * @param onSetupWithFile - API hook handler to submit parsed imported data (title, html). Originates in `SiteSetupPage`.
+ */
 interface ImportFilesModalProps {
   isOpen: boolean
   onClose: () => void
   onSetupWithFile: (title: string, content: string) => Promise<void>
 }
 
+/**
+ * ImportFilesModal Component.
+ * 
+ * Purpose:
+ * Renders a drag-and-drop modal dialogue enabling users to import markdown files (`.md`).
+ * Uses HTML5 FileReader API to parse files client-side, converting them to HTML
+ * before uploading them to the backend site onboarding endpoints.
+ */
 export default function ImportFilesModal({
   isOpen,
   onClose,
   onSetupWithFile
 }: ImportFilesModalProps) {
+  // Mock AI enhancement switch state
   const [aiEnhanceEnabled, setAiEnhanceEnabled] = useState(true)
+  // Store reference to the chosen File object
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  // Drag over dropzone hover state flag
   const [isDragging, setIsDragging] = useState(false)
+  // Submission spinner toggle
   const [isImporting, setIsImporting] = useState(false)
 
+  // Early return: If modal is not active, render nothing
   if (!isOpen) return null
 
+  /**
+   * Handler: Receives files selected through the native browser file picker dialog.
+   */
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       setSelectedFile(e.target.files[0])
     }
   }
 
+  /**
+   * Drag Drop Handlers: Manage dropzone hover styles.
+   */
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
     setIsDragging(true)
@@ -35,6 +60,10 @@ export default function ImportFilesModal({
     setIsDragging(false)
   }
 
+  /**
+   * Handler: Receives dragged files dropped onto the target container.
+   * Asserts filename matches `.md` format.
+   */
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
     setIsDragging(false)
@@ -48,15 +77,25 @@ export default function ImportFilesModal({
     }
   }
 
+  /**
+   * Action: Reads the selected markdown file inside the browser.
+   * Parses content into HTML format using `parseMarkdownToHtml` and returns results to parent setup callbacks.
+   */
   const handleStartImport = async () => {
     if (!selectedFile) return
     setIsImporting(true)
+    
+    // Instantiates asynchronous web reader API
     const reader = new FileReader()
     reader.onload = async (event) => {
       try {
         const rawContent = event.target?.result as string
+        // Parse markdown formatting tokens into HTML strings
         const content = parseMarkdownToHtml(rawContent)
+        // Crop file extension to use raw filename as default page title
         const title = selectedFile.name.replace(/\.md$/, "")
+        
+        // Execute onboarding server request
         await onSetupWithFile(title, content)
         onClose()
         setSelectedFile(null)
@@ -70,13 +109,15 @@ export default function ImportFilesModal({
       alert("Failed to read file content.")
       setIsImporting(false)
     }
+    // Instruct reader to process file stream as plain UTF-8 text
     reader.readAsText(selectedFile)
   }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-[#161618] border border-[#222225] rounded-xl w-full max-w-[500px] p-6 shadow-2xl flex flex-col gap-6 relative animate-in zoom-in-95 duration-200">
-        {/* Close Button */}
+        
+        {/* Close Button X */}
         <button 
           onClick={() => {
             onClose()
@@ -87,7 +128,7 @@ export default function ImportFilesModal({
           <X className="h-5 w-5" />
         </button>
 
-        {/* Header */}
+        {/* Header descriptions */}
         <div className="flex flex-col gap-1.5 pr-8">
           <h2 className="text-xl font-semibold text-white">Import Files</h2>
           <p className="text-xs text-[#8e8e93]">
@@ -95,7 +136,7 @@ export default function ImportFilesModal({
           </p>
         </div>
 
-        {/* AI Enhance Row */}
+        {/* AI Enhance Toggle Selector */}
         <div className="flex items-center justify-between bg-[#1c1c1e] p-4 rounded-xl border border-[#222225]">
           <div className="flex flex-col gap-0.5 max-w-[80%] font-sans">
             <h3 className="text-xs font-semibold text-white">Enhance import with AI</h3>
@@ -111,7 +152,7 @@ export default function ImportFilesModal({
           </button>
         </div>
 
-        {/* Dropzone Area */}
+        {/* Drag-and-drop / Click-to-browse Area */}
         <input 
           id="file-picker"
           type="file"
@@ -140,7 +181,7 @@ export default function ImportFilesModal({
           </span>
         </div>
 
-        {/* Footer */}
+        {/* Modal Controls Footer */}
         <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#222225] mt-2">
           <button 
             onClick={() => {
@@ -167,3 +208,4 @@ export default function ImportFilesModal({
     </div>
   )
 }
+

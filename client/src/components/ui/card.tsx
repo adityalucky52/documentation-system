@@ -2,6 +2,14 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
+/**
+ * Reusable Card component to display content in boxed layouts.
+ * 
+ * Props:
+ * @param className - Optional CSS classes to extend/override style properties.
+ * @param size - Sizing variation (default: standard padding, sm: compact padding).
+ * @param ...props - Normal HTML div element attributes.
+ */
 function Card({
   className,
   size = "default",
@@ -20,6 +28,13 @@ function Card({
   )
 }
 
+/**
+ * Header section of the Card. Usually houses the title and description/actions.
+ * 
+ * Props:
+ * @param className - Custom classes passed from parent.
+ * @param ...props - Normal div properties.
+ */
 function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -33,6 +48,13 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+/**
+ * Title element of the Card. Font size adjusts automatically if card is small.
+ * 
+ * Props:
+ * @param className - Custom classes passed from parent.
+ * @param ...props - Normal div properties.
+ */
 function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -46,6 +68,13 @@ function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+/**
+ * Explanatory text that sits below CardTitle.
+ * 
+ * Props:
+ * @param className - Custom classes passed from parent.
+ * @param ...props - Normal div properties.
+ */
 function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -56,6 +85,13 @@ function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+/**
+ * Floating/aligned slot inside CardHeader for action controls like buttons or dropdowns.
+ * 
+ * Props:
+ * @param className - Custom classes passed from parent.
+ * @param ...props - Normal div properties.
+ */
 function CardAction({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -69,6 +105,13 @@ function CardAction({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+/**
+ * Main content body wrapper of the Card. Inherits Card's spacing context.
+ * 
+ * Props:
+ * @param className - Custom classes passed from parent.
+ * @param ...props - Normal div properties.
+ */
 function CardContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -79,6 +122,13 @@ function CardContent({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+/**
+ * Footer panel with border-t and background highlights.
+ * 
+ * Props:
+ * @param className - Custom classes passed from parent.
+ * @param ...props - Normal div properties.
+ */
 function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -101,3 +151,4 @@ export {
   CardDescription,
   CardContent,
 }
+

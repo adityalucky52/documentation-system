@@ -5,34 +5,58 @@ import { useChangeRequestStore } from "../changeRequestStore"
 import { useAuthStore } from "../../auth/authStore"
 import ChangeRequestReviewPane from "./ChangeRequestReviewPane"
 
+/**
+ * GlobalChangeRequestsPage Component.
+ * 
+ * Purpose:
+ * Renders the organization-wide change requests dashboard view.
+ * Enables team leaders or users to filter through all drafts, active reviews, merged histories, or closed files
+ * across all spaces inside the organization.
+ * 
+ * Structure:
+ * 1. Left Panel (Feed List): Displays list of filtered branches. Provides dropdown filters.
+ * 2. Right Panel (Detail Canvas): Shows comparative side-by-side diff details (`ChangeRequestReviewPane`)
+ *    when a specific request is clicked, or shows a graphic template placeholder if none is active.
+ */
 export default function GlobalChangeRequestsPage() {
+  // Extract org context and current review targets from routes
   const { orgId, changeRequestId } = useParams<{ orgId: string; changeRequestId: string }>()
   const navigate = useNavigate()
+  
+  // Use React Router hook to read and sync status filter values directly to search queries
   const [searchParams, setSearchParams] = useSearchParams()
   const currentStatusFilter = searchParams.get("status") || "draft"
 
+  // Fetch session parameters
   const { user } = useAuthStore()
+  // Connect change request version control stores
   const { 
     changeRequests, 
     fetchOrgChangeRequests,
     isLoading 
   } = useChangeRequestStore()
 
-  // Filter dropdown state
+  // Dropdown filter list toggle state
   const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false)
 
-  // Fetch change requests when orgId or filter changes
+  // Effect 1: Pull updated list of change requests when the organization or status filters toggle
   useEffect(() => {
     if (orgId && user) {
       fetchOrgChangeRequests(orgId, user.id, currentStatusFilter)
     }
   }, [orgId, currentStatusFilter, user, fetchOrgChangeRequests])
 
+  /**
+   * Action: Modifies search query parameters to trigger new api fetches and collapses selection cards.
+   */
   const handleStatusFilterChange = (status: string) => {
     setSearchParams({ status })
     setIsFilterDropdownOpen(false)
   }
 
+  /**
+   * Helper: Resolves visual display strings from raw enum states.
+   */
   const getFilterDisplayName = (status: string) => {
     if (status === "draft") return "Draft"
     if (status === "merged") return "Merged"
@@ -44,19 +68,20 @@ export default function GlobalChangeRequestsPage() {
   return (
     <div className="flex-1 flex w-full h-full text-[#f5f5f7] bg-[#0c0c0e] font-sans overflow-hidden">
       
-      {/* Middle Column: Change Requests Feed (320px wide) */}
+      {/* Middle Column: Change Requests Feed List */}
       <div className="w-[320px] border-r border-[#1f1f23] bg-[#0c0c0e] flex flex-col justify-between shrink-0 h-full">
         <div className="flex flex-col h-full overflow-hidden">
           
-          {/* Header */}
+          {/* Section Header */}
           <div className="flex items-center justify-between p-4 border-b border-[#1f1f23] bg-[#0c0c0e] shrink-0">
             <span className="text-[13px] font-semibold text-[#f5f5f7]">Change requests</span>
             <button className="text-[#8e8e93] hover:text-white text-xs font-semibold hover:bg-[#1a1a1e] px-1.5 py-0.5 rounded transition-colors cursor-pointer">+</button>
           </div>
 
-          {/* Checklist Filters */}
+          {/* Filter Bar Controls */}
           <div className="flex items-center gap-2 px-4 py-2.5 border-b border-[#1f1f23] bg-[#0c0c0e]/50 relative shrink-0">
             <div className="relative">
+              {/* Active selection pill button */}
               <button 
                 onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
                 className="px-2.5 py-1 text-xs font-semibold rounded bg-[#161618] border border-[#222225] hover:border-[#323236] text-white flex items-center gap-1 cursor-pointer"
@@ -66,6 +91,7 @@ export default function GlobalChangeRequestsPage() {
                 <ChevronDown className="w-3.5 h-3.5 text-[#8e8e93]" />
               </button>
 
+              {/* Status options dropdown box */}
               {isFilterDropdownOpen && (
                 <div className="absolute left-0 top-full mt-1.5 w-44 bg-[#161618] border border-[#222225] rounded-lg shadow-xl py-1 z-50 flex flex-col animate-in fade-in duration-100">
                   <button 
@@ -116,7 +142,7 @@ export default function GlobalChangeRequestsPage() {
             </button>
           </div>
 
-          {/* Change Request Feed List */}
+          {/* Change Request Feed List Container */}
           <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2">
             {isLoading && changeRequests.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center text-zinc-500 gap-2">
@@ -140,7 +166,7 @@ export default function GlobalChangeRequestsPage() {
                     onClick={() => navigate(`/o/${orgId}/changes/${cr.id}`)}
                     className={`p-3 border rounded-lg flex flex-col gap-2 transition-all cursor-pointer group ${isActive ? "bg-[#1c1c1e] border-indigo-500/35" : "border-[#1f1f23] hover:border-[#323236] bg-[#121214]"}`}
                   >
-                    {/* Site & Space label */}
+                    {/* Site & Space labels */}
                     <div className="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider flex items-center gap-1">
                       <span>{siteName}</span>
                       <span>/</span>
@@ -182,16 +208,19 @@ export default function GlobalChangeRequestsPage() {
       {/* Right Column: Comparative Diff Canvas */}
       <div className="flex-1 flex flex-col h-full bg-[#121214] overflow-hidden">
         {changeRequestId ? (
+          /* Render diff review panel if ID exists in URL */
           <ChangeRequestReviewPane />
         ) : (
+          /* Render Graphic Placeholder if none is active */
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center gap-6">
-            {/* Stacked Cards Graphic */}
+            
+            {/* Stacked decorative card visuals */}
             <div className="relative w-[220px] h-[120px] mb-2 flex items-center justify-center">
-              {/* Bottom Card */}
+              {/* Bottom Layer Card */}
               <div className="absolute w-[200px] h-[100px] bg-[#161618] border border-[#222225] rounded-xl translate-y-[-10px] scale-[0.92] opacity-30 shadow-md"></div>
-              {/* Middle Card */}
+              {/* Middle Layer Card */}
               <div className="absolute w-[200px] h-[100px] bg-[#161618] border border-[#222225] rounded-xl translate-y-[-5px] scale-[0.96] opacity-60 shadow-lg"></div>
-              {/* Top/Front Card */}
+              {/* Foreground main mockup card */}
               <div className="absolute w-[200px] h-[100px] bg-[#161618]/95 border border-[#2d2d30] rounded-xl p-3 shadow-2xl flex flex-col justify-between text-left">
                 <div className="flex items-center justify-between">
                   <span className="px-2 py-0.5 bg-indigo-950/40 text-indigo-400 border border-indigo-500/25 rounded-full text-[9px] font-bold flex items-center gap-0.5">
@@ -212,7 +241,7 @@ export default function GlobalChangeRequestsPage() {
               </div>
             </div>
 
-            {/* Typography */}
+            {/* Placeholder descriptions typography */}
             <div className="flex flex-col gap-1.5 max-w-[420px]">
               <h2 className="text-sm font-bold text-white tracking-tight">Select a change request</h2>
               <p className="text-xs text-[#8e8e93] leading-relaxed">
@@ -226,3 +255,4 @@ export default function GlobalChangeRequestsPage() {
     </div>
   )
 }
+

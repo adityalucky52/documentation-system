@@ -1,12 +1,31 @@
-import React from "react"
 import { BookOpen, Globe, Upload } from "lucide-react"
 
+/**
+ * SiteOnboardingOptionsProps
+ * @param siteName - The name of the documentation site being created.
+ * @param onSetupBlank - Callback function to navigate or initiate the setup of a blank site.
+ * @param onOpenImportModal - Callback function to trigger the content import workflow.
+ */
 interface SiteOnboardingOptionsProps {
   siteName: string
   onSetupBlank: () => void
   onOpenImportModal: () => void
 }
 
+/**
+ * SiteOnboardingOptions Component
+ * 
+ * Purpose:
+ * Renders the onboarding selection view for a new site, allowing users to:
+ * 1. Start with a template (Documentation structure).
+ * 2. Import existing content (Docs, Markdown, HTML).
+ * 3. Start from a blank state.
+ * 
+ * Features:
+ * - Responsive grid layout for onboarding cards.
+ * - Interactive visual representations of each setup method.
+ * - Conditional trigger handlers for each setup flow.
+ */
 export default function SiteOnboardingOptions({
   siteName,
   onSetupBlank,

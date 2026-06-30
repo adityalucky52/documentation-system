@@ -2,18 +2,31 @@ import { BubbleMenu as TiptapBubbleMenu } from "@tiptap/react/menus"
 import { type Editor } from "@tiptap/react"
 import { Bold, Italic, Strikethrough, Code } from "lucide-react"
 
+/**
+ * BubbleMenu Props.
+ * @param editor - TipTap editor instance context. Originates in `RichTextEditor`.
+ */
 interface BubbleMenuProps {
   editor: Editor | null
 }
 
+/**
+ * BubbleMenu Component.
+ * 
+ * Purpose:
+ * Renders a floating formatting menu overlay above highlight selections in the editor canvas.
+ * Renders buttons to toggle Bold, Italic, Strikethrough, and inline Code styles.
+ */
 export default function BubbleMenu({ editor }: BubbleMenuProps) {
+  // Early return: If the editor instance hasn't mounted, render nothing
   if (!editor) return null
 
   return (
     <TiptapBubbleMenu
       editor={editor}
-      className="flex items-center gap-1 bg-[#161618] border border-[#2c2c30] p-1 rounded-lg shadow-xl z-40"
+      className="flex items-center gap-1 bg-[#161618] border border-[#2c2c30] p-1 rounded-lg shadow-xl z-40 font-sans"
     >
+      {/* Bold toggle button */}
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleBold().run()}
@@ -24,6 +37,8 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
       >
         <Bold className="w-3.5 h-3.5" />
       </button>
+
+      {/* Italic toggle button */}
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleItalic().run()}
@@ -34,6 +49,8 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
       >
         <Italic className="w-3.5 h-3.5" />
       </button>
+
+      {/* Strikethrough toggle button */}
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleStrike().run()}
@@ -44,6 +61,8 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
       >
         <Strikethrough className="w-3.5 h-3.5" />
       </button>
+
+      {/* Code formatting toggle button */}
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleCode().run()}
@@ -57,3 +76,4 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
     </TiptapBubbleMenu>
   )
 }
+

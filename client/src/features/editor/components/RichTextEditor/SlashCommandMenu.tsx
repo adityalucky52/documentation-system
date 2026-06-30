@@ -2,15 +2,30 @@ import { useEffect, useState } from "react"
 import { type Editor } from "@tiptap/react"
 import { Heading1, Heading2, List, ListOrdered, Terminal, Quote } from "lucide-react"
 
+/**
+ * SlashCommandMenu Props.
+ * @param editor - TipTap editor instance context. Originates in `RichTextEditor`.
+ */
 interface SlashCommandMenuProps {
   editor: Editor | null
 }
 
+/**
+ * SlashCommandMenu Component.
+ * 
+ * Purpose:
+ * Renders a Notion-style floating command selector popup that opens when the user types `/`.
+ * Enables users to easily format blocks (Headings, Lists, Code blocks, Quotes) using keyboard arrow keys.
+ */
 export default function SlashCommandMenu({ editor }: SlashCommandMenuProps) {
+  // Menu visibility status
   const [isOpen, setIsOpen] = useState(false)
+  // Coordinates mapping calculated from current cursor selection bounds
   const [coords, setCoords] = useState({ top: 0, left: 0 })
+  // Tracks keyboard selection index focus inside commands list
   const [selectedIndex, setSelectedIndex] = useState(0)
 
+  // List of block commands mapping
   const commands = [
     {
       title: "Heading 1",
@@ -19,6 +34,7 @@ export default function SlashCommandMenu({ editor }: SlashCommandMenuProps) {
       action: () => {
         if (!editor) return
         const { pos } = editor.state.selection.$from
+        // Deletes the "/" trigger character and transforms block to H1 heading node
         editor.chain().focus().deleteRange({ from: pos - 1, to: pos }).toggleHeading({ level: 1 }).run()
       }
     },
@@ -29,6 +45,7 @@ export default function SlashCommandMenu({ editor }: SlashCommandMenuProps) {
       action: () => {
         if (!editor) return
         const { pos } = editor.state.selection.$from
+        // Deletes the "/" trigger character and transforms block to H2 heading node
         editor.chain().focus().deleteRange({ from: pos - 1, to: pos }).toggleHeading({ level: 2 }).run()
       }
     },
@@ -74,6 +91,8 @@ export default function SlashCommandMenu({ editor }: SlashCommandMenuProps) {
     }
   ]
 
+  // Effect 1: Monitors document typing content updates to detect the "/" trigger character.
+  // Calculates selection coordinate position to align the popup menu near the cursor.
   useEffect(() => {
     if (!editor) return
 
@@ -82,10 +101,13 @@ export default function SlashCommandMenu({ editor }: SlashCommandMenuProps) {
       const { $from } = selection
       const textBefore = $from.nodeBefore?.text || ""
 
+      // Check if user has just typed the slash "/" key
       if (textBefore.endsWith("/")) {
         const view = editor.view
+        // TipTap coordinates API returns bounds relative to the viewport
         const selectionCoords = view.coordsAtPos($from.pos)
         
+        // Add scroll offsets to position menu absolute on screen canvas
         setCoords({
           top: selectionCoords.bottom + window.scrollY + 8,
           left: selectionCoords.left + window.scrollX
@@ -97,15 +119,18 @@ export default function SlashCommandMenu({ editor }: SlashCommandMenuProps) {
       }
     }
 
+    // Bind event listeners to editor typing updates
     editor.on("selectionUpdate", handleUpdate)
     editor.on("update", handleUpdate)
 
+    // Detach listeners on unmount
     return () => {
       editor.off("selectionUpdate", handleUpdate)
       editor.off("update", handleUpdate)
     }
   }, [editor])
 
+  // Effect 2: Capture document keydown events to intercept arrow navigation and enter choices when the menu is active
   useEffect(() => {
     if (!isOpen || !editor) return
 
@@ -118,6 +143,7 @@ export default function SlashCommandMenu({ editor }: SlashCommandMenuProps) {
         setSelectedIndex((prev) => (prev - 1 + commands.length) % commands.length)
       } else if (e.key === "Enter") {
         e.preventDefault()
+        // Execute block formatting command
         commands[selectedIndex].action()
         setIsOpen(false)
       } else if (e.key === "Escape") {
@@ -127,20 +153,23 @@ export default function SlashCommandMenu({ editor }: SlashCommandMenuProps) {
       }
     }
 
+    // Capture keyboard events strictly before standard DOM bubbles
     window.addEventListener("keydown", handleKeyDown, true)
     return () => window.removeEventListener("keydown", handleKeyDown, true)
   }, [isOpen, selectedIndex, editor, commands])
 
+  // Early return: Render nothing if menu isn't triggered
   if (!isOpen) return null
 
   return (
     <div 
-      className="fixed z-50 bg-[#161618] border border-[#2c2c30] w-[260px] rounded-xl shadow-2xl p-1.5 flex flex-col gap-0.5"
+      className="fixed z-50 bg-[#161618] border border-[#2c2c30] w-[260px] rounded-xl shadow-2xl p-1.5 flex flex-col gap-0.5 font-sans"
       style={{ top: `${coords.top}px`, left: `${coords.left}px` }}
     >
       <div className="px-2 py-1 text-[10px] font-bold text-[#8e8e93] uppercase tracking-wider">
         Basic Blocks
       </div>
+      {/* List choices mapper */}
       {commands.map((cmd, idx) => {
         const Icon = cmd.icon
         const isSelected = idx === selectedIndex
@@ -171,3 +200,4 @@ export default function SlashCommandMenu({ editor }: SlashCommandMenuProps) {
     </div>
   )
 }
+

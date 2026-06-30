@@ -1,7 +1,14 @@
-import React from "react"
 import { useNavigate } from "react-router-dom"
 import { Send } from "lucide-react"
 
+/**
+ * SiteDashboardHeader Props.
+ * @param siteName - Name of the documentation site, passed from parent `SiteSetupPage`.
+ * @param activeTab - Current tab string context.
+ * @param setActiveTab - State modifier callback from parent `SiteSetupPage` to toggle tab renders.
+ * @param orgId - Organization unique identifier to resolve route paths.
+ * @param siteSpaces - Spaces mapping list to find default editing spaces.
+ */
 interface SiteDashboardHeaderProps {
   siteName: string
   activeTab: "overview" | "editor" | "preview" | "settings" | "publish"
@@ -10,6 +17,13 @@ interface SiteDashboardHeaderProps {
   siteSpaces: Array<{ id: string; name: string }> | undefined
 }
 
+/**
+ * SiteDashboardHeader Component.
+ * 
+ * Purpose:
+ * Renders the top menu bar in the Site Setup view.
+ * Houses breadcrumbs (Docs sites / siteName) and tab toggles (Overview, Editor, Preview, Settings, Publish).
+ */
 export default function SiteDashboardHeader({
   siteName,
   activeTab,
@@ -36,6 +50,7 @@ export default function SiteDashboardHeader({
         >
           Overview
         </button>
+        {/* Editor: Navigates to the editor screen of the first space if spaces exist, else sets tab to editor */}
         <button 
           onClick={() => {
             if (siteSpaces && siteSpaces.length > 0) {
@@ -71,3 +86,4 @@ export default function SiteDashboardHeader({
     </div>
   )
 }
+

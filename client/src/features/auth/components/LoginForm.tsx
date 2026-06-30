@@ -5,6 +5,10 @@ import { Input } from "@/components/ui/input"
 import { Loader2, ArrowLeft } from "lucide-react"
 import { useAuthStore } from "../authStore"
 
+/**
+ * GitBookLogo SVG Component.
+ * Pure visual component representing the branding logo (three slanted gray/black blocks).
+ */
 const GitBookLogo = () => (
   <div className="flex flex-col gap-[2px] items-start justify-center">
     <div className="w-[18px] h-[7px] bg-[#cfcfd3] rounded-[2px] transform skew-x-[-15deg]"></div>
@@ -13,6 +17,10 @@ const GitBookLogo = () => (
   </div>
 )
 
+/**
+ * GithubIcon SVG Component.
+ * Displays GitHub's octocat silhouette, used for the OAuth sign-in option.
+ */
 const GithubIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     viewBox="0 0 24 24"
@@ -23,6 +31,10 @@ const GithubIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 )
 
+/**
+ * GoogleIcon SVG Component.
+ * Displays Google's colorful logo icon for social login options.
+ */
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     viewBox="0 0 24 24"
@@ -49,19 +61,42 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 )
 
+/**
+ * LoginForm Component.
+ * Handles user sign in using a two-step wizard style:
+ * 1. Step 1 ('email'): Asks the user for their email address and displays social login options.
+ * 2. Step 2 ('password'): Asks for the password to authenticate.
+ * 
+ * Custom Store Dependencies:
+ * - `useAuthStore`: Retrieves `login` (triggering POST requests), `isLoading` (submit indicator),
+ *   `error` (authentication error messages), and `clearError` (resets error notification).
+ * 
+ * Routing Flow:
+ * - On login success, evaluates if the user belongs to an organization:
+ *   - If yes: Navigates to `/o/:orgId/home`.
+ *   - If no: Navigates to `/create-organization` onboarding screen.
+ */
 export default function LoginForm() {
   const navigate = useNavigate()
+  
+  // Local state to track step ('email' input step vs 'password' input step)
   const [step, setStep] = useState<'email' | 'password'>('email')
+  // Form input value states
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   
+  // Destructures Zustand authentication controls and states
   const { login, isLoading, error, clearError } = useAuthStore()
 
-  // Clear errors when navigating away or switching steps
+  // Reset any store validation errors when switching between form steps
   useEffect(() => {
     clearError()
   }, [step, clearError])
 
+  /**
+   * Action handler for Step 1: Email Submission.
+   * Prevents standard HTML postback, validates email exists, and slides forward to password input.
+   */
   const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (email) {
@@ -69,10 +104,16 @@ export default function LoginForm() {
     }
   }
 
+  /**
+   * Action handler for Step 2: Password Submission and Authentication.
+   * Calls the store `login` method. If successful, checks user organization mapping
+   * and routes accordingly.
+   */
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const success = await login(email, password)
     if (success) {
+      // Access updated Zustand state directly to find organization properties
       const currentOrg = useAuthStore.getState().organization
       if (currentOrg) {
         navigate(`/o/${currentOrg.id}/home`)
@@ -84,7 +125,7 @@ export default function LoginForm() {
 
   return (
     <div className="w-full max-w-[420px] flex flex-col gap-9 px-4 sm:px-6">
-      {/* GitBook Logo */}
+      {/* GitBook Logo top header indicator */}
       <div className="flex items-center gap-2">
         <GitBookLogo />
       </div>
@@ -98,7 +139,7 @@ export default function LoginForm() {
       <div className="flex flex-col gap-5">
         {step === 'email' ? (
           <>
-            {/* Social Authentication buttons */}
+            {/* Social Authentication buttons (Mocks) */}
             <div className="grid grid-cols-2 gap-3">
               <Button variant="outline" className="w-full h-10 gap-2 border-[#26262b] bg-[#121214] hover:bg-[#1b1b1f] hover:text-white text-[#d4d4d8] font-medium text-xs rounded-lg transition-colors">
                 <GithubIcon className="size-4 text-[#d4d4d8]" />
@@ -119,6 +160,7 @@ export default function LoginForm() {
               </span>
             </div>
 
+            {/* Email form step */}
             <form onSubmit={handleEmailSubmit} className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
                 <Input
@@ -141,9 +183,10 @@ export default function LoginForm() {
             </form>
           </>
         ) : (
+          /* Password input form step */
           <form onSubmit={handlePasswordSubmit} className="flex flex-col gap-4">
             <div className="flex flex-col gap-3">
-              {/* Back to email link */}
+              {/* Back to email link showing currently entered email */}
               <div className="flex items-center justify-between text-xs text-[#71717a]">
                 <button
                   type="button"
@@ -166,6 +209,7 @@ export default function LoginForm() {
                 className="h-10 bg-[#0e0e10] border-[#26262b] text-white placeholder-[#71717a] focus-visible:border-white focus-visible:ring-0 rounded-lg text-sm transition-colors"
               />
 
+              {/* Render dynamic authentication API errors here */}
               {error && (
                 <span className="text-xs text-rose-500 font-semibold">{error}</span>
               )}
@@ -204,3 +248,4 @@ export default function LoginForm() {
     </div>
   )
 }
+

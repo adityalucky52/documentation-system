@@ -1,10 +1,20 @@
-import React from "react"
 import { PenTool, GitBranch, UserPlus, Palette, Compass, Globe, Plus } from "lucide-react"
 
+/**
+ * SiteGetStartedChecklist Props.
+ * @param onStartFirstChangeRequest - Callback trigger to route to the text editor space, originating in `SiteSetupPage`.
+ */
 interface SiteGetStartedChecklistProps {
   onStartFirstChangeRequest: () => void
 }
 
+/**
+ * SiteGetStartedChecklist Component.
+ * 
+ * Purpose:
+ * Renders an onboarding task checklist for newly initialized documentation sites.
+ * Helps direct users on subsequent configuration tasks (content editing, team invites, style settings, custom domains).
+ */
 export default function SiteGetStartedChecklist({
   onStartFirstChangeRequest
 }: SiteGetStartedChecklistProps) {
@@ -19,7 +29,7 @@ export default function SiteGetStartedChecklist({
 
       <div className="flex flex-col gap-3">
         
-        {/* Task 1: Edit your content (Expanded active task) */}
+        {/* Task 1: Edit your content (Expanded active task card layout) */}
         <div className="bg-[#161618] border border-[#222225] rounded-xl p-6 flex flex-col gap-4">
           <div className="flex items-start justify-between">
             <div className="flex gap-3.5">
@@ -35,7 +45,7 @@ export default function SiteGetStartedChecklist({
             </div>
           </div>
 
-          {/* Expand controls */}
+          {/* Action buttons triggers */}
           <div className="flex items-center gap-3 pl-[50px] mt-1">
             <button 
               onClick={onStartFirstChangeRequest}
@@ -50,7 +60,7 @@ export default function SiteGetStartedChecklist({
           </div>
         </div>
 
-        {/* Task 2: Invite teammates */}
+        {/* Task 2: Invite teammates (Collapsed) */}
         <div className="bg-[#161618] border border-[#222225] hover:border-[#323236] rounded-xl p-4 flex items-center justify-between transition-colors cursor-pointer group">
           <div className="flex items-center gap-3.5">
             <div className="w-8 h-8 rounded-lg bg-[#222225] border border-[#2c2c30] flex items-center justify-center text-[#8e8e93] group-hover:text-white shrink-0 transition-colors">
@@ -63,7 +73,7 @@ export default function SiteGetStartedChecklist({
           <Plus className="h-4 w-4 text-[#8e8e93]" />
         </div>
 
-        {/* Task 3: Customize look and feel */}
+        {/* Task 3: Customize look and feel (Collapsed) */}
         <div className="bg-[#161618] border border-[#222225] hover:border-[#323236] rounded-xl p-4 flex items-center justify-between transition-colors cursor-pointer group">
           <div className="flex items-center gap-3.5">
             <div className="w-8 h-8 rounded-lg bg-[#222225] border border-[#2c2c30] flex items-center justify-center text-[#8e8e93] group-hover:text-white shrink-0 transition-colors">
@@ -76,7 +86,7 @@ export default function SiteGetStartedChecklist({
           <Plus className="h-4 w-4 text-[#8e8e93]" />
         </div>
 
-        {/* Task 4: Add structure to site */}
+        {/* Task 4: Add structure to site (Collapsed) */}
         <div className="bg-[#161618] border border-[#222225] hover:border-[#323236] rounded-xl p-4 flex items-center justify-between transition-colors cursor-pointer group">
           <div className="flex items-center gap-3.5">
             <div className="w-8 h-8 rounded-lg bg-[#222225] border border-[#2c2c30] flex items-center justify-center text-[#8e8e93] group-hover:text-white shrink-0 transition-colors">
@@ -89,7 +99,7 @@ export default function SiteGetStartedChecklist({
           <Plus className="h-4 w-4 text-[#8e8e93]" />
         </div>
 
-        {/* Task 5: Add custom domain */}
+        {/* Task 5: Add custom domain (Collapsed) */}
         <div className="bg-[#161618] border border-[#222225] hover:border-[#323236] rounded-xl p-4 flex items-center justify-between transition-colors cursor-pointer group">
           <div className="flex items-center gap-3.5">
             <div className="w-8 h-8 rounded-lg bg-[#222225] border border-[#2c2c30] flex items-center justify-center text-[#8e8e93] group-hover:text-white shrink-0 transition-colors">
@@ -106,3 +116,4 @@ export default function SiteGetStartedChecklist({
     </div>
   )
 }
+

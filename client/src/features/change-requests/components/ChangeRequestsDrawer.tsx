@@ -4,17 +4,33 @@ import { X, GitPullRequest, GitBranch, Plus, Calendar, User, CheckCircle2, Chevr
 import { useChangeRequestStore } from "../changeRequestStore"
 import { useAuthStore } from "../../auth/authStore"
 
+/**
+ * ChangeRequestsDrawer Props.
+ * @param onClose - Callback to close/dismiss the drawer overlay. Originates in `SpaceEditorPage`.
+ */
 interface ChangeRequestsDrawerProps {
   onClose: () => void
 }
 
+/**
+ * ChangeRequestsDrawer Component.
+ * 
+ * Purpose:
+ * Renders the sliding side drawer displaying space-level change requests.
+ * Allows authors to browse branches, filter status lists, spin up new drafts inline,
+ * and click specific cards to inspect differences (`~/changes/:crId`).
+ */
 export default function ChangeRequestsDrawer({ onClose }: ChangeRequestsDrawerProps) {
+  // Retrieve space and org parameters from route paths
   const { spaceId, orgId } = useParams<{ spaceId: string; orgId: string }>()
   const navigate = useNavigate()
+  
+  // Use React Router hook to read and sync status filter values directly to search queries
   const [searchParams, setSearchParams] = useSearchParams()
   const currentStatusFilter = searchParams.get("status") || "draft"
 
   const { user } = useAuthStore()
+  // Connect change requests version control stores
   const { 
     changeRequests, 
     fetchChangeRequests, 
@@ -29,21 +45,25 @@ export default function ChangeRequestsDrawer({ onClose }: ChangeRequestsDrawerPr
   const [isCreating, setIsCreating] = useState(false)
   const [newCrTitle, setNewCrTitle] = useState("")
 
-  // Fetch change requests when spaceId or filter changes
+  // Effect 1: Query change requests matching status filters when active space or filter changes
   useEffect(() => {
     if (spaceId && user) {
       fetchChangeRequests(spaceId, user.id, currentStatusFilter)
     }
   }, [spaceId, currentStatusFilter, user, fetchChangeRequests])
 
-  // Handle switching status filters
+  /**
+   * Action: Modifies search query parameters to trigger new api fetches and collapses selection cards.
+   */
   const handleStatusFilterChange = (status: string) => {
     setSearchParams({ status })
     setIsFilterDropdownOpen(false)
   }
 
-  // Handle creating a new change request — does NOT auto-switch workspace
-  // Switching is done via the context switcher in the editor header
+  /**
+   * Action: Handles creating a new change request.
+   * Invokes creation api, cleans up input buffers, and refreshes the context switcher's cache.
+   */
   const handleCreateCR = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newCrTitle.trim() || !spaceId || !user) return
@@ -57,7 +77,9 @@ export default function ChangeRequestsDrawer({ onClose }: ChangeRequestsDrawerPr
     }
   }
 
-  // Clicking a CR card opens its review pane
+  /**
+   * Action: Navigates router state to inspection review pane `/o/:orgId/s/:spaceId/~/changes/:crId`.
+   */
   const handleOpenReviewPane = (crId: string) => {
     navigate(`/o/${orgId}/s/${spaceId}/~/changes/${crId}`)
   }
@@ -71,7 +93,7 @@ export default function ChangeRequestsDrawer({ onClose }: ChangeRequestsDrawerPr
   }
 
   return (
-    <div className="fixed inset-y-0 right-0 z-40 w-[380px] bg-[#0e0e11] border-l border-[#1f1f23] shadow-2xl flex flex-col animate-in slide-in-from-right duration-200">
+    <div className="fixed inset-y-0 right-0 z-40 w-[380px] bg-[#0e0e11] border-l border-[#1f1f23] shadow-2xl flex flex-col animate-in slide-in-from-right duration-200 font-sans">
       
       {/* Drawer Header */}
       <div className="flex items-center justify-between p-4 border-b border-[#1f1f23] bg-[#0c0c0e]">
@@ -261,3 +283,4 @@ export default function ChangeRequestsDrawer({ onClose }: ChangeRequestsDrawerPr
     </div>
   )
 }
+

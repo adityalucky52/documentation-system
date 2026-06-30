@@ -1,5 +1,9 @@
 import { create } from "zustand"
 
+/**
+ * Page Interface.
+ * Represents a documentation page document.
+ */
 export interface Page {
   id: string
   title: string
@@ -9,6 +13,11 @@ export interface Page {
   updatedAt: string
 }
 
+/**
+ * Space Interface.
+ * Represents a branch/workspace space within a specific documentation site (Git-like).
+ * Holds pages.
+ */
 export interface Space {
   id: string
   name: string
@@ -18,6 +27,10 @@ export interface Space {
   updatedAt: string
 }
 
+/**
+ * Site Interface.
+ * Represents a documentation site. Contains spaces.
+ */
 export interface Site {
   id: string
   name: string
@@ -26,12 +39,15 @@ export interface Site {
   updatedAt: string
 }
 
+/**
+ * Zustand State Interface for sites management.
+ */
 interface SitesState {
-  sites: Site[]
-  currentSpace: (Space & { pages: Page[]; site?: Site }) | null
+  sites: Site[] // List of all organization documentation sites
+  currentSpace: (Space & { pages: Page[]; site?: Site }) | null // The currently active editor workspace space
   isLoading: boolean
   error: string | null
-  isCreateModalOpen: boolean
+  isCreateModalOpen: boolean // UI visibility flag for CreateSiteModal
 
   setCreateModalOpen: (isOpen: boolean) => void
   fetchSites: (userId: string) => Promise<void>
@@ -41,17 +57,28 @@ interface SitesState {
   deleteSite: (siteId: string, userId: string) => Promise<boolean>
 }
 
+// REST API Base route for documentation sites management
 const API_URL = "http://localhost:5001/api/site"
 
-export const useSitesStore = create<SitesState>((set, get) => ({
+/**
+ * useSitesStore: Zustand store to handle CRUD operations on sites, spaces, and active workspace configurations.
+ */
+export const useSitesStore = create<SitesState>((set) => ({
   sites: [],
   currentSpace: null,
   isLoading: false,
   error: null,
   isCreateModalOpen: false,
 
+  /**
+   * Action: Sets the visibility of the new site creation dialog drawer.
+   */
   setCreateModalOpen: (isOpen) => set({ isCreateModalOpen: isOpen }),
 
+  /**
+   * Action: Fetches all sites available in the user's active organization.
+   * Sends user credentials via custom 'x-user-id' header.
+   */
   fetchSites: async (userId) => {
     set({ isLoading: true, error: null })
     try {
@@ -62,6 +89,7 @@ export const useSitesStore = create<SitesState>((set, get) => ({
       const data = await response.json()
       if (!response.ok) throw new Error(data.error || "Failed to fetch sites")
 
+      // Map raw dates into reader-friendly formatted strings
       const mappedSites = data.sites.map((site: any) => ({
         id: site.id,
         name: site.name,
@@ -81,6 +109,10 @@ export const useSitesStore = create<SitesState>((set, get) => ({
     }
   },
 
+  /**
+   * Action: Instantiates a new site shell.
+   * Returns the new site's unique identifier.
+   */
   addSite: async (name, userId) => {
     set({ isLoading: true, error: null })
     try {
@@ -100,6 +132,7 @@ export const useSitesStore = create<SitesState>((set, get) => ({
         updatedAt: "now",
       }
 
+      // Prepend the new site to the active lists array
       set((state) => ({ sites: [newSite, ...state.sites], isLoading: false }))
       return data.site.id
     } catch (err: any) {
@@ -108,6 +141,10 @@ export const useSitesStore = create<SitesState>((set, get) => ({
     }
   },
 
+  /**
+   * Action: Completes onboarding configuration for a site.
+   * Prompts if a user chooses to start with empty docs or imports markdown templates.
+   */
   setupSite: async (siteId, type, userId, importData) => {
     set({ isLoading: true, error: null })
     try {
@@ -132,6 +169,7 @@ export const useSitesStore = create<SitesState>((set, get) => ({
         }),
       }
 
+      // Update the modified site in the stores list
       set((state) => ({
         sites: state.sites.map((s) => (s.id === siteId ? updatedSite : s)),
         isLoading: false,
@@ -143,11 +181,20 @@ export const useSitesStore = create<SitesState>((set, get) => ({
     }
   },
 
+  /**
+   * Action: Loads full details of a specific workspace space, including nested pages.
+   * 
+   * Dynamic Import & Circular Dependency Mitigation:
+   * Dynamically loads `useChangeRequestStore` inside the function runtime. This resolves
+   * TypeScript compiler circular imports (where sitesStore needs changeRequestStore, and vice-versa).
+   */
   fetchSpace: async (spaceId, userId, branchId) => {
     set({ isLoading: true, error: null })
     try {
-      // Import and read activeBranchId from useChangeRequestStore dynamically to prevent circular dependencies
+      // Lazy load to bypass circular imports
       const { useChangeRequestStore } = await import("../change-requests/changeRequestStore")
+      
+      // Fallback: If no custom branchId is explicitly passed, fetch the store's current active branch (Git mode context)
       const resolvedBranchId = branchId ?? useChangeRequestStore.getState().activeBranchId
       const url = resolvedBranchId
         ? `${API_URL}/spaces/${spaceId}?branchId=${resolvedBranchId}`
@@ -166,6 +213,9 @@ export const useSitesStore = create<SitesState>((set, get) => ({
     }
   },
 
+  /**
+   * Action: Deletes a site.
+   */
   deleteSite: async (siteId, userId) => {
     set({ isLoading: true, error: null })
     try {
@@ -176,6 +226,7 @@ export const useSitesStore = create<SitesState>((set, get) => ({
       const data = await response.json()
       if (!response.ok) throw new Error(data.error || "Failed to delete site")
 
+      // Remove deleted item from the store's sites array
       set((state) => ({ sites: state.sites.filter((s) => s.id !== siteId), isLoading: false }))
       return true
     } catch (err: any) {
@@ -184,3 +235,4 @@ export const useSitesStore = create<SitesState>((set, get) => ({
     }
   },
 }))
+

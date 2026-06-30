@@ -6,6 +6,10 @@ import { Loader2 } from "lucide-react"
 import { useAuthStore } from "../auth/authStore"
 import BrandingPanel from "../auth/components/BrandingPanel"
 
+/**
+ * GitBookLogo SVG Component.
+ * Pure visual component representing the branding logo (three slanted gray/black blocks).
+ */
 const GitBookLogo = () => (
   <div className="flex flex-col gap-[2px] items-start justify-center">
     <div className="w-[18px] h-[7px] bg-[#cfcfd3] rounded-[2px] transform skew-x-[-15deg]"></div>
@@ -14,12 +18,32 @@ const GitBookLogo = () => (
   </div>
 )
 
+/**
+ * CreateOrganizationPage Component.
+ * 
+ * Purpose:
+ * Renders the onboarding interface for creating a new workspace organization.
+ * 
+ * Security & Routing Guard:
+ * 1. Checks if a user is logged in. If not, pushes to `/login`.
+ * 2. Checks if an organization is already linked. If so, skips onboarding and redirects directly to home.
+ * 3. Attempts to fetch existing organization mapping from the server via `fetchMyOrganization()`.
+ *    If found, syncs state and redirects the user automatically.
+ * 
+ * Context & API Flow:
+ * - Employs `useAuthStore` (Zustand state store) to fetch user context, cache the organization,
+ *   and execute the API post request for org creation.
+ */
 export default function CreateOrganizationPage() {
   const navigate = useNavigate()
   const { user, organization, createOrganization, fetchMyOrganization } = useAuthStore()
+  
+  // Controlled input for the new organization name
   const [orgName, setOrgName] = useState("")
+  // Local submission indicator loading state
   const [isLoading, setIsLoading] = useState(false)
 
+  // Redirect guard: Redirect immediately if user is already mapped to an organization
   useEffect(() => {
     if (!user) {
       navigate("/login")
@@ -31,6 +55,7 @@ export default function CreateOrganizationPage() {
       return
     }
 
+    // Double check with server if a session is present but store was initialized without organization details
     fetchMyOrganization().then((org) => {
       if (org) {
         navigate(`/o/${org.id}/home`)
@@ -38,6 +63,10 @@ export default function CreateOrganizationPage() {
     })
   }, [user, organization, navigate, fetchMyOrganization])
 
+  /**
+   * Triggers the creation of the organization on the server.
+   * On success, routes the user directly to the home screen of their new organization `/o/:orgId/home`.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
@@ -50,10 +79,12 @@ export default function CreateOrganizationPage() {
 
   return (
     <div className="flex min-h-screen w-full flex-col lg:flex-row bg-[#0c0c0e]">
-      {/* Form (Left side on desktop) */}
+      
+      {/* Workspace Onboarding Form Pane (Left hand side on desktop displays) */}
       <div className="flex flex-1 flex-col justify-center items-center py-12 lg:py-0 px-4 sm:px-6">
         <div className="w-full max-w-[420px] flex flex-col gap-9">
-          {/* Logo */}
+          
+          {/* Logo container */}
           <div className="flex items-center gap-2">
             <GitBookLogo />
           </div>
@@ -104,8 +135,9 @@ export default function CreateOrganizationPage() {
         </div>
       </div>
 
-      {/* Visual showcase (Right side on desktop) */}
+      {/* Visual showcase panel (Right side on desktop displays) */}
       <BrandingPanel />
     </div>
   )
 }
+

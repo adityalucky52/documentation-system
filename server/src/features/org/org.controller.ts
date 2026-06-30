@@ -2,6 +2,20 @@ import { FastifyRequest, FastifyReply } from "fastify"
 import { prisma } from "../../lib/prisma.js"
 import { CreateOrgDto, OrgResponseDto, GetOrgResponseDto } from "./org.dto.js"
 
+/**
+ * createOrgHandler Controller.
+ * 
+ * Purpose:
+ * Creates a tenant workspace container (Organization) for the authenticated user.
+ * 
+ * Triggered by:
+ * - Frontend: CreateOrganizationPage onboarding form (on clicking "Create workspace").
+ * 
+ * Database Operations:
+ * 1. Read check: Reads `Organization` table to ensure the user does not already own one.
+ * 2. Create organization: Generates an 8-character slug ID and writes (inserts) a new row
+ *    into the `Organization` table.
+ */
 export async function createOrgHandler(
   request: FastifyRequest<{ Body: CreateOrgDto }>,
   reply: FastifyReply
@@ -9,7 +23,7 @@ export async function createOrgHandler(
   const { name } = request.body
   const userId = request.userId!
 
-  // Check if organization already exists for the user
+  // Check if organization already exists for the user in the database
   const existingOrg = await prisma.organization.findUnique({
     where: { userId }
   })
@@ -23,10 +37,10 @@ export async function createOrgHandler(
     return reply.send(response)
   }
 
-  // Generate a short ID of 8 characters
+  // Generate a short ID of 8 characters for URL slugging (e.g. o/abcde123)
   const orgId = Math.random().toString(36).substring(2, 10)
 
-  // Create organization
+  // Write new Organization record to database
   const organization = await prisma.organization.create({
     data: {
       id: orgId,
@@ -43,6 +57,18 @@ export async function createOrgHandler(
   return reply.status(201).send(response)
 }
 
+/**
+ * getMyOrgHandler Controller.
+ * 
+ * Purpose:
+ * Returns the tenant workspace belonging to the user.
+ * 
+ * Triggered by:
+ * - Frontend: DashboardLayout (onMount page loading sequence, or useAuthStore.syncOrganization checks).
+ * 
+ * Database Operations:
+ * - Read organization: Reads `Organization` table looking up a row matched to `userId`.
+ */
 export async function getMyOrgHandler(
   request: FastifyRequest,
   reply: FastifyReply
@@ -60,5 +86,6 @@ export async function getMyOrgHandler(
   const response: GetOrgResponseDto = { organization }
   return reply.send(response)
 }
+
 
 

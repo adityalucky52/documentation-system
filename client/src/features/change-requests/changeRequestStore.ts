@@ -1,5 +1,9 @@
 import { create } from "zustand"
 
+/**
+ * ChangeRequest Interface.
+ * Maps metadata for the Git-like document branching system.
+ */
 export interface ChangeRequest {
   id: string
   title: string
@@ -21,6 +25,10 @@ export interface ChangeRequest {
   }
 }
 
+/**
+ * ChangeRequestState Interface.
+ * Manages active branch states, list array caches, loading states, and API CRUD triggers.
+ */
 interface ChangeRequestState {
   changeRequests: ChangeRequest[]
   selectedChangeRequestId: string | null
@@ -39,6 +47,10 @@ interface ChangeRequestState {
   fetchOrgChangeRequests: (orgId: string, userId: string, status?: string) => Promise<void>
 }
 
+/**
+ * useChangeRequestStore.
+ * Zustand store executing version control requests (branches creation, draft updates, merge commits).
+ */
 export const useChangeRequestStore = create<ChangeRequestState>((set, get) => ({
   changeRequests: [],
   selectedChangeRequestId: null,
@@ -47,6 +59,10 @@ export const useChangeRequestStore = create<ChangeRequestState>((set, get) => ({
   isLoading: false,
   error: null,
 
+  /**
+   * Action: Selects and activates a change request branch.
+   * Updates state IDs to route write transactions to the source branch context.
+   */
   selectChangeRequest: (crId) => {
     const { openChangeRequests } = get()
     const cr = openChangeRequests.find((c) => c.id === crId) ?? null
@@ -56,8 +72,13 @@ export const useChangeRequestStore = create<ChangeRequestState>((set, get) => ({
     })
   },
 
+  /**
+   * Action: Fetches open and draft change requests in parallel using Promise.all.
+   * Helps synchronize active selection references in case elements were deleted on backend.
+   */
   fetchOpenChangeRequests: async (spaceId, userId) => {
     try {
+      // Fires concurrent API fetches for drafts and open branches
       const [draftRes, openRes] = await Promise.all([
         fetch(`http://localhost:5001/api/vc/spaces/${spaceId}/change-requests?status=draft`, {
           headers: { "x-user-id": userId },
@@ -71,15 +92,19 @@ export const useChangeRequestStore = create<ChangeRequestState>((set, get) => ({
       const combined: ChangeRequest[] = [...drafts, ...opens]
       set({ openChangeRequests: combined })
 
+      // Clean up stale selections if no longer present in combined lists
       const { selectedChangeRequestId } = get()
       if (selectedChangeRequestId && !combined.find((c) => c.id === selectedChangeRequestId)) {
         set({ selectedChangeRequestId: null, activeBranchId: null })
       }
     } catch {
-      // Non-critical
+      // Non-critical loading failures fail silently
     }
   },
 
+  /**
+   * Action: Queries space change requests matching specific status filters.
+   */
   fetchChangeRequests: async (spaceId, userId, status) => {
     set({ isLoading: true, error: null })
     try {
@@ -96,6 +121,10 @@ export const useChangeRequestStore = create<ChangeRequestState>((set, get) => ({
     }
   },
 
+  /**
+   * Action: Creates a new Change Request branch for safe content editing.
+   * Fires POST request and appends results to state collections.
+   */
   createChangeRequest: async (spaceId, title, userId) => {
     set({ isLoading: true, error: null })
     try {
@@ -121,6 +150,11 @@ export const useChangeRequestStore = create<ChangeRequestState>((set, get) => ({
     }
   },
 
+  /**
+   * Action: Merges a branch back into the main branch.
+   * Fires PUT request to merge endpoint.
+   * Toggles status flags, removes entry from active open requests list, and resets active selections.
+   */
   mergeChangeRequest: async (changeRequestId, userId) => {
     set({ isLoading: true, error: null })
     try {
@@ -148,6 +182,9 @@ export const useChangeRequestStore = create<ChangeRequestState>((set, get) => ({
     }
   },
 
+  /**
+   * Action: Promotes a draft request to active OPEN review state.
+   */
   requestChangeRequestReview: async (changeRequestId, userId) => {
     set({ isLoading: true, error: null })
     try {
@@ -173,6 +210,9 @@ export const useChangeRequestStore = create<ChangeRequestState>((set, get) => ({
     }
   },
 
+  /**
+   * Action: Fetches diff schemas and full body records of a specific change request.
+   */
   fetchChangeRequestDetail: async (changeRequestId, userId) => {
     set({ isLoading: true, error: null })
     try {
@@ -190,6 +230,9 @@ export const useChangeRequestStore = create<ChangeRequestState>((set, get) => ({
     }
   },
 
+  /**
+   * Action: Fetches all active branch change requests globally under the active organization.
+   */
   fetchOrgChangeRequests: async (orgId, userId, status) => {
     set({ isLoading: true, error: null })
     try {
@@ -206,3 +249,4 @@ export const useChangeRequestStore = create<ChangeRequestState>((set, get) => ({
     }
   },
 }))
+

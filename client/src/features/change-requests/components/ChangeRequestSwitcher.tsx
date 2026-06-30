@@ -4,6 +4,10 @@ import { useChangeRequestStore, type ChangeRequest } from "../changeRequestStore
 import { useSitesStore } from "../../sites-management/sitesStore"
 import { useAuthStore } from "../../auth/authStore"
 
+/**
+ * CRStatusBadge Component.
+ * Helper: Renders stylized status pill banners (In review vs Draft) mapping branch properties.
+ */
 function CRStatusBadge({ status }: { status: ChangeRequest["status"] }) {
   if (status === "OPEN")
     return (
@@ -20,15 +24,32 @@ function CRStatusBadge({ status }: { status: ChangeRequest["status"] }) {
   return null
 }
 
+/**
+ * ChangeRequestSwitcher Props.
+ * @param spaceId - Unique identifier of active space. Originates in `EditorHeader`.
+ * @param showNotification - Triggers status notice flashes. Originates in `EditorHeader`.
+ */
 interface ChangeRequestSwitcherProps {
   spaceId: string
   showNotification: (msg: string) => void
 }
 
+/**
+ * ChangeRequestSwitcher Component.
+ * 
+ * Purpose:
+ * Renders a dropdown menu button inside the editor sub-header breadcrumbs.
+ * Enables writers to switch between:
+ * 1. Read-Only Published Site (main branch).
+ * 2. Active Change Request Branches (safe drafts).
+ * Also houses a mini form inline inside the footer to spin up new branches instantly.
+ */
 export default function ChangeRequestSwitcher({ spaceId, showNotification }: ChangeRequestSwitcherProps) {
   const { user } = useAuthStore()
+  // Ref container targeting switcher dropdown (used to capture outside click dismissals)
   const switcherRef = useRef<HTMLDivElement>(null)
 
+  // version control store hooks
   const {
     selectedChangeRequestId,
     openChangeRequests,
@@ -36,14 +57,18 @@ export default function ChangeRequestSwitcher({ spaceId, showNotification }: Cha
     createChangeRequest,
   } = useChangeRequestStore()
 
+  // Sites store to refetch space page lists
   const { fetchSpace } = useSitesStore()
 
+  // Local UI panel toggles
   const [isSwitcherOpen, setIsSwitcherOpen] = useState(false)
   const [isCreatingCR, setIsCreatingCR] = useState(false)
   const [newCRTitle, setNewCRTitle] = useState("")
 
+  // Derived: Active change request branch object
   const activeCR = openChangeRequests.find((cr) => cr.id === selectedChangeRequestId) ?? null
 
+  // Effect 1: Handle clicks outside the dropdown menu wrapper to dismiss dialog overlays
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (switcherRef.current && !switcherRef.current.contains(e.target as Node)) {
@@ -56,6 +81,10 @@ export default function ChangeRequestSwitcher({ spaceId, showNotification }: Cha
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
+  /**
+   * Action: Selects and activates a change request branch.
+   * Calls store actions, closes panels, and reloads space contents matching branch revision.
+   */
   const handleSelectCR = async (crId: string | null) => {
     selectChangeRequest(crId)
     setIsSwitcherOpen(false)
@@ -63,10 +92,14 @@ export default function ChangeRequestSwitcher({ spaceId, showNotification }: Cha
     setNewCRTitle("")
     if (spaceId && user) {
       const cr = openChangeRequests.find((c) => c.id === crId) ?? null
+      // Refetch page lists matching specific Git branch source branch ID (defaults to main if null)
       await fetchSpace(spaceId, user.id, cr?.sourceBranchId ?? undefined)
     }
   }
 
+  /**
+   * Action: Submits a new Change Request branch creation.
+   */
   const handleCreateCR = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newCRTitle.trim() || !spaceId || !user) return
@@ -79,7 +112,8 @@ export default function ChangeRequestSwitcher({ spaceId, showNotification }: Cha
   }
 
   return (
-    <div className="relative shrink-0" ref={switcherRef}>
+    <div className="relative shrink-0 font-sans" ref={switcherRef}>
+      {/* Active Selection Button: Changes color schemes if editing a draft vs browsing live published content */}
       <button
         onClick={() => {
           setIsSwitcherOpen((v) => !v)
@@ -110,6 +144,7 @@ export default function ChangeRequestSwitcher({ spaceId, showNotification }: Cha
         <ChevronDown className="w-3 h-3 text-[#8e8e93] ml-0.5" />
       </button>
 
+      {/* Switcher Dropdown overlays */}
       {isSwitcherOpen && (
         <div className="absolute left-0 top-full mt-2 w-80 bg-[#161618] border border-[#222225] rounded-xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
           <div className="px-3 py-2.5 border-b border-[#1f1f23] flex items-center justify-between">
@@ -124,6 +159,7 @@ export default function ChangeRequestSwitcher({ spaceId, showNotification }: Cha
             </button>
           </div>
 
+          {/* Published Site option (Main Branch) */}
           <button
             onClick={() => handleSelectCR(null)}
             className={`w-full px-3 py-2.5 flex items-center gap-2.5 hover:bg-[#1c1c1e] transition-colors cursor-pointer border-b border-[#1f1f23] ${
@@ -140,6 +176,7 @@ export default function ChangeRequestSwitcher({ spaceId, showNotification }: Cha
             {!selectedChangeRequestId && <Check className="w-3.5 h-3.5 text-indigo-400 ml-auto shrink-0" />}
           </button>
 
+          {/* Change Requests branches list section */}
           {openChangeRequests.length > 0 && (
             <div className="flex flex-col">
               <div className="px-3 pt-2 pb-1">
@@ -172,6 +209,7 @@ export default function ChangeRequestSwitcher({ spaceId, showNotification }: Cha
             </div>
           )}
 
+          {/* Switcher Footer: Add branch shortcuts */}
           <div className="border-t border-[#1f1f23]">
             {!isCreatingCR ? (
               <button
@@ -215,3 +253,4 @@ export default function ChangeRequestSwitcher({ spaceId, showNotification }: Cha
     </div>
   )
 }
+

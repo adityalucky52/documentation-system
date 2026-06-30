@@ -1,10 +1,20 @@
-import React from "react"
 import { Trash2 } from "lucide-react"
 
+/**
+ * SiteSettingsPanel Props.
+ * @param onDeleteSite - Callback trigger to initiate site deletion. Originates in `SiteSetupPage`.
+ */
 interface SiteSettingsPanelProps {
   onDeleteSite: () => void
 }
 
+/**
+ * SiteSettingsPanel Component.
+ * 
+ * Purpose:
+ * Renders settings controls for the active documentation site.
+ * Currently supports the Danger Zone options enabling users to delete the site.
+ */
 export default function SiteSettingsPanel({ onDeleteSite }: SiteSettingsPanelProps) {
   return (
     <div className="lg:col-span-8 flex flex-col gap-6 animate-in fade-in duration-200 font-sans">
@@ -13,6 +23,7 @@ export default function SiteSettingsPanel({ onDeleteSite }: SiteSettingsPanelPro
         <p className="text-xs text-[#8e8e93]">Manage configurations and control access for this documentation site.</p>
       </div>
 
+      {/* Danger Zone: Houses deletion options with red alert border highlighting */}
       <div className="bg-[#161618] border border-[#e11d48]/20 rounded-xl p-6 flex flex-col gap-5">
         <div className="flex flex-col gap-1.5 border-b border-[#222225] pb-4">
           <h3 className="text-sm font-semibold text-white">Danger Zone</h3>
@@ -36,3 +47,4 @@ export default function SiteSettingsPanel({ onDeleteSite }: SiteSettingsPanelPro
     </div>
   )
 }
+
