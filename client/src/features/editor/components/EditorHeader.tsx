@@ -66,11 +66,10 @@ export default function EditorHeader({
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-2.5 py-1.5 text-[11px] font-semibold rounded-md flex items-center gap-1 transition-colors cursor-pointer ${
-              activeTab === tab.id
+            className={`px-2.5 py-1.5 text-[11px] font-semibold rounded-md flex items-center gap-1 transition-colors cursor-pointer ${activeTab === tab.id
                 ? "text-white bg-[#1c1c1e]"
                 : "text-[#8e8e93] hover:text-white hover:bg-[#161618]"
-            }`}
+              }`}
           >
             {tab.icon}
             <span>{tab.label}</span>
@@ -88,14 +87,6 @@ export default function EditorHeader({
           >
             <GitMerge className="w-3.5 h-3.5 shrink-0" />
             <span>Merge</span>
-          </button>
-
-          {/* Share Button */}
-          <button
-            className="p-1.5 bg-[#161618] border border-[#222225] hover:border-[#323236] text-[#8e8e93] hover:text-white rounded-lg transition-colors cursor-pointer"
-            title="Share Space"
-          >
-            <Share2 className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>

@@ -15,8 +15,7 @@ import { ChangeRequestsController } from "./change-requests.controller.js"
  * 2. GET `/spaces/:spaceId/change-requests` -> Lists branch options (triggered by Switcher dropdown open).
  * 3. GET `/change-requests/:changeRequestId` -> Fetches comparative side-by-side page diffs (triggered by Review Pane).
  * 4. PUT `/change-requests/:changeRequestId/merge` -> Merges changes into live pages (triggered by Merge Modal).
- * 5. PUT `/change-requests/:changeRequestId/review` -> Sets status to OPEN (triggered by Request Review Modal).
- * 6. GET `/orgs/:orgId/change-requests` -> Lists all organization-level change requests (triggered by GlobalChangeRequestsPage).
+ * 5. GET `/orgs/:orgId/change-requests` -> Lists all organization-level change requests (triggered by GlobalChangeRequestsPage).
  * 
  * Middlewares:
  * preHandler Hook: Authenticates the request context.
@@ -38,7 +37,6 @@ export async function changeRequestsRoutes(fastify: FastifyInstance) {
   fastify.get("/spaces/:spaceId/change-requests", controller.getChangeRequests)
   fastify.get("/change-requests/:changeRequestId", controller.getChangeRequestDetail)
   fastify.put("/change-requests/:changeRequestId/merge", controller.mergeChangeRequest)
-  fastify.put("/change-requests/:changeRequestId/review", controller.requestReview)
   fastify.get("/orgs/:orgId/change-requests", controller.getOrgChangeRequests)
 }
 

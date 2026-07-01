@@ -7,7 +7,7 @@ import { create } from "zustand"
 export interface ChangeRequest {
   id: string
   title: string
-  status: "DRAFT" | "OPEN" | "MERGED" | "CLOSED"
+  status: "OPEN" | "MERGED" | "CLOSED"
   spaceId: string
   sourceBranchId: string
   sourceBranch?: { id: string; name: string }
@@ -42,7 +42,6 @@ interface ChangeRequestState {
   fetchChangeRequests: (spaceId: string, userId: string, status?: string) => Promise<void>
   createChangeRequest: (spaceId: string, title: string, userId: string) => Promise<ChangeRequest | null>
   mergeChangeRequest: (changeRequestId: string, userId: string) => Promise<boolean>
-  requestChangeRequestReview: (changeRequestId: string, userId: string) => Promise<boolean>
   fetchChangeRequestDetail: (changeRequestId: string, userId: string) => Promise<any>
   fetchOrgChangeRequests: (orgId: string, userId: string, status?: string) => Promise<void>
 }
@@ -73,28 +72,21 @@ export const useChangeRequestStore = create<ChangeRequestState>((set, get) => ({
   },
 
   /**
-   * Action: Fetches open and draft change requests in parallel using Promise.all.
+   * Action: Fetches open change requests.
    * Helps synchronize active selection references in case elements were deleted on backend.
    */
   fetchOpenChangeRequests: async (spaceId, userId) => {
     try {
-      // Fires concurrent API fetches for drafts and open branches
-      const [draftRes, openRes] = await Promise.all([
-        fetch(`http://localhost:5001/api/vc/spaces/${spaceId}/change-requests?status=draft`, {
-          headers: { "x-user-id": userId },
-        }),
-        fetch(`http://localhost:5001/api/vc/spaces/${spaceId}/change-requests?status=open`, {
-          headers: { "x-user-id": userId },
-        }),
-      ])
-      const drafts = draftRes.ok ? await draftRes.json() : []
-      const opens = openRes.ok ? await openRes.json() : []
-      const combined: ChangeRequest[] = [...drafts, ...opens]
-      set({ openChangeRequests: combined })
+      const response = await fetch(
+        `http://localhost:5001/api/vc/spaces/${spaceId}/change-requests?status=open`,
+        { headers: { "x-user-id": userId } }
+      )
+      const opens = response.ok ? await response.json() : []
+      set({ openChangeRequests: opens })
 
-      // Clean up stale selections if no longer present in combined lists
+      // Clean up stale selections if no longer present in lists
       const { selectedChangeRequestId } = get()
-      if (selectedChangeRequestId && !combined.find((c) => c.id === selectedChangeRequestId)) {
+      if (selectedChangeRequestId && !opens.find((c) => c.id === selectedChangeRequestId)) {
         set({ selectedChangeRequestId: null, activeBranchId: null })
       }
     } catch {
@@ -182,33 +174,7 @@ export const useChangeRequestStore = create<ChangeRequestState>((set, get) => ({
     }
   },
 
-  /**
-   * Action: Promotes a draft request to active OPEN review state.
-   */
-  requestChangeRequestReview: async (changeRequestId, userId) => {
-    set({ isLoading: true, error: null })
-    try {
-      const response = await fetch(
-        `http://localhost:5001/api/vc/change-requests/${changeRequestId}/review`,
-        { method: "PUT", headers: { "x-user-id": userId } }
-      )
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.error || "Failed to request review")
-      set((state) => ({
-        changeRequests: state.changeRequests.map((cr) =>
-          cr.id === changeRequestId ? { ...cr, status: "OPEN" } : cr
-        ),
-        openChangeRequests: state.openChangeRequests.map((cr) =>
-          cr.id === changeRequestId ? { ...cr, status: "OPEN" } : cr
-        ),
-        isLoading: false,
-      }))
-      return true
-    } catch (err: any) {
-      set({ error: err.message || "An unexpected error occurred", isLoading: false })
-      return false
-    }
-  },
+
 
   /**
    * Action: Fetches diff schemas and full body records of a specific change request.

@@ -1,4 +1,4 @@
-import { Sparkles, Globe } from "lucide-react"
+import { Sparkles, } from "lucide-react"
 import RichTextEditor from "./RichTextEditor/RichTextEditor"
 import { parseMarkdownToHtml } from "../../../utils/markdownParser"
 import { type Page } from "../../sites-management/sitesStore"
@@ -53,12 +53,7 @@ export default function EditorCanvas({
             <div className="flex flex-col gap-6 animate-in fade-in duration-200">
               <h1 className="text-4xl font-bold tracking-tight text-white">{editTitle || selectedPage.title}</h1>
               <div className="border-b border-[#1f1f23] pb-4 text-xs text-[#8e8e93] flex items-center gap-4">
-                <span className="flex items-center gap-1.5 text-emerald-400">
-                  <Globe className="w-3 h-3" />
-                  Preview
-                </span>
-                <span>•</span>
-                <span>Read-only</span>
+
               </div>
               {editContent ? (
                 <article

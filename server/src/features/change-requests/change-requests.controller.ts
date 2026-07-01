@@ -16,7 +16,7 @@ export class ChangeRequestsController {
    * createChangeRequest Handler.
    * 
    * Purpose:
-   * Initializes a new workspace edit branch and registers it as a draft change request.
+   * Initializes a new workspace edit branch and registers it as an open change request.
    * 
    * Triggered by:
    * - Frontend: ChangeRequestSwitcher footer (on clicking "Create" in the new branch form).
@@ -120,27 +120,6 @@ export class ChangeRequestsController {
     return reply.send(changeRequests)
   }
 
-  /**
-   * requestReview Handler.
-   * 
-   * Purpose:
-   * Promotes a draft change request to the OPEN review stage (ready for merge).
-   * 
-   * Triggered by:
-   * - Frontend: RequestReviewModal, ChangeRequestReviewPane ("Request review" triggers).
-   */
-  requestReview = async (
-    request: FastifyRequest<{ Params: { changeRequestId: string } }>,
-    reply: FastifyReply
-  ) => {
-    try {
-      const { changeRequestId } = request.params
-      const updated = await this.service.requestReview(changeRequestId)
-      return reply.send(updated)
-    } catch (err: any) {
-      const statusCode = err.message === "Change request not found" ? 404 : 400
-      return reply.status(statusCode).send({ error: err.message })
-    }
-  }
+
 }
 

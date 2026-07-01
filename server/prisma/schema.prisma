@@ -122,7 +122,6 @@ model Page {
  * - CLOSED: Archived.
  */
 enum ChangeRequestStatus {
-  DRAFT
   OPEN
   MERGED
   CLOSED
@@ -161,7 +160,7 @@ model Branch {
 model ChangeRequest {
   id             String              @id
   title          String
-  status         ChangeRequestStatus @default(DRAFT)
+  status         ChangeRequestStatus @default(OPEN)
   spaceId        String
   space          Space               @relation(fields: [spaceId], references: [id], onDelete: Cascade)
   sourceBranchId String

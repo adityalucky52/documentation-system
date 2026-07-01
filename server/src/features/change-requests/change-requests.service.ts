@@ -49,7 +49,7 @@ export class ChangeRequestsService {
    * 1. Confirms main branch existence.
    * 2. Generates new branch credentials.
    * 3. Loops and copies all main `PageVersion` records into the new branch.
-   * 4. Registers the new `ChangeRequest` database record in DRAFT status.
+   * 4. Registers the new `ChangeRequest` database record in OPEN status.
    */
   async createChangeRequest(spaceId: string, title: string, userId: string) {
     // Ensure main branch exists
@@ -73,7 +73,7 @@ export class ChangeRequestsService {
     return this.repository.createChangeRequest(
       changeRequestId,
       title || "Untitled Change Request",
-      ChangeRequestStatus.DRAFT,
+      ChangeRequestStatus.OPEN,
       spaceId,
       branchId,
       mainBranchId,
@@ -180,23 +180,6 @@ export class ChangeRequestsService {
     return this.repository.findOrgChangeRequests(spaceIds, filterStatus)
   }
 
-  /**
-   * requestReview.
-   * 
-   * Purpose:
-   * Updates a change request's status from DRAFT to OPEN, signifying it is ready for review.
-   */
-  async requestReview(changeRequestId: string) {
-    const changeRequest = await this.repository.findChangeRequestById(changeRequestId)
-    if (!changeRequest) {
-      throw new Error("Change request not found")
-    }
 
-    if (changeRequest.status !== ChangeRequestStatus.DRAFT) {
-      throw new Error("Only draft change requests can be sent for review")
-    }
-
-    return this.repository.updateChangeRequestStatus(changeRequestId, ChangeRequestStatus.OPEN)
-  }
 }
 
