@@ -9,7 +9,8 @@
     "start": "node dist/server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "db-push": "prisma db push",
-    "generate": "prisma generate"
+    "generate": "prisma generate",
+    "check-db": "tsx check-db.js"
   },
   "keywords": [],
   "author": "",

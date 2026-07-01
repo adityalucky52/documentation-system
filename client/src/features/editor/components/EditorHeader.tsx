@@ -17,6 +17,8 @@ interface EditorHeaderProps {
   activeTab: "editor" | "preview"
   setActiveTab: (tab: "editor" | "preview") => void
   handleMergeEdits: () => void
+  isSaving: boolean
+  saveError: string | null
 }
 
 /**
@@ -36,6 +38,8 @@ export default function EditorHeader({
   activeTab,
   setActiveTab,
   handleMergeEdits,
+  isSaving,
+  saveError,
 }: EditorHeaderProps) {
   const navigate = useNavigate()
 
@@ -78,7 +82,27 @@ export default function EditorHeader({
       </div>
 
       {/* Right Pane: Actions */}
-      <div className="flex items-center gap-2 justify-end flex-1 min-w-0">
+      <div className="flex items-center gap-4 justify-end flex-1 min-w-0">
+        {/* Autosave Status Indicator */}
+        <div className="flex items-center gap-2 text-[11px] font-sans select-none shrink-0">
+          {isSaving ? (
+            <>
+              <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+              <span className="text-zinc-500 font-medium">Saving...</span>
+            </>
+          ) : saveError ? (
+            <>
+              <div className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+              <span className="text-rose-400 font-medium">Error saving</span>
+            </>
+          ) : (
+            <>
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse duration-1000" />
+              <span className="text-zinc-500">Saved</span>
+            </>
+          )}
+        </div>
+
         <div className="flex items-center gap-2 shrink-0">
           {/* Merge Button */}
           <button

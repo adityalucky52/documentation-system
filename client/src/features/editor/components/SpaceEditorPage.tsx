@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useAuthStore } from "../../auth/authStore"
 import { useSitesStore, type Page } from "../../sites-management/sitesStore"
@@ -43,7 +43,7 @@ export default function SpaceEditorPage() {
   // Sites Store integration for space details
   const { currentSpace, fetchSpace, isLoading } = useSitesStore()
   // Editor Store integration for page updating callbacks
-  const { updatePage } = useEditorStore()
+  const { updatePage, isLoading: isSaving, error: saveError } = useEditorStore()
 
   // Local UI States
   const [selectedPage, setSelectedPage] = useState<Page | null>(null)
@@ -51,7 +51,7 @@ export default function SpaceEditorPage() {
   const [activeTab, setActiveTab] = useState<"editor" | "preview">("editor")
   // Buffered text drafts for input forms (updates local state immediately, auto-saves to backend after debounce)
   const [editTitle, setEditTitle] = useState("")
-  const [editContent, setEditContent] = useState("")
+  const [editContent, setEditContent] = useState<string | null>(null)
 
   // Modal Dialog states
   const [isMergeModalOpen, setIsMergeModalOpen] = useState(false)
@@ -68,6 +68,7 @@ export default function SpaceEditorPage() {
   useEffect(() => {
     if (currentSpace?.pages && currentSpace.pages.length > 0) {
       if (!selectedPage || !currentSpace.pages.some((p) => p.id === selectedPage.id)) {
+        setEditContent(null) // Unmount editor while loading initial page
         setSelectedPage(currentSpace.pages[0])
       } else {
         // Sync updated content of currently selected page
@@ -79,17 +80,73 @@ export default function SpaceEditorPage() {
     }
   }, [currentSpace]) // eslint-disable-line
 
-  // Effect 3: Reset draft values in form controls when the active page changes
+  // Keep refs of latest values for use in fire-and-forget unmount cleanup and window event listeners
+  const stateRef = useRef({ selectedPage, editTitle, editContent, user })
+  useEffect(() => {
+    stateRef.current = { selectedPage, editTitle, editContent, user }
+  }, [selectedPage, editTitle, editContent, user])
+
+  // Wrap setActiveTab to clean up content state and prevent stale content flashes
+  const handleTabChange = (tab: "editor" | "preview") => {
+    setEditContent(null)
+    setActiveTab(tab)
+  }
+
+  // Custom page selection wrapper to immediately save pending draft edits before switching
+  const handleSelectPage = async (page: Page) => {
+    if (selectedPage && editContent !== null && (editTitle !== selectedPage.title || editContent !== selectedPage.content)) {
+      try {
+        await updatePage(selectedPage.id, editTitle, editContent, user?.id || "")
+      } catch (err) {
+        console.error("Failed to save changes before page switch", err)
+      }
+    }
+    // Only reset content buffer if switching to a DIFFERENT page!
+    if (!selectedPage || selectedPage.id !== page.id) {
+      setEditContent(null)
+    }
+    setSelectedPage(page)
+  }
+
+  // SPA navigation unmount handler to flush pending edits in background
+  useEffect(() => {
+    return () => {
+      const { selectedPage: page, editTitle: title, editContent: content, user: u } = stateRef.current
+      if (page && u && content !== null && (title !== page.title || content !== page.content)) {
+        updatePage(page.id, title, content, u.id).catch((err) => {
+          console.error("Unmount auto-save failed:", err)
+        })
+      }
+    }
+  }, [updatePage])
+
+  // Window unload / tab reload event handler
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      const { selectedPage: page, editTitle: title, editContent: content } = stateRef.current
+      if (page && content !== null && (title !== page.title || content !== page.content)) {
+        e.preventDefault()
+        e.returnValue = ""
+      }
+    }
+    window.addEventListener("beforeunload", handleBeforeUnload)
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload)
+  }, [])
+
+  // Effect 3: Reset draft values in form controls when active page changes,
+  // but prevent overwriting user input during active editing sessions.
   useEffect(() => {
     if (selectedPage) {
-      setEditTitle(selectedPage.title)
-      setEditContent(selectedPage.content)
+      if (activeTab === "preview" || editContent === null) {
+        setEditTitle(selectedPage.title)
+        setEditContent(selectedPage.content ?? "")
+      }
     }
-  }, [selectedPage?.id]) // eslint-disable-line
+  }, [selectedPage]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Effect 4: Debounced Auto-save. Fires updatePage API requests 800ms after user pauses typing.
   useEffect(() => {
-    if (!selectedPage || !user) return
+    if (!selectedPage || !user || editContent === null) return
     // Skip if drafts match already committed version
     if (editTitle === selectedPage.title && editContent === selectedPage.content) return
 
@@ -151,8 +208,10 @@ export default function SpaceEditorPage() {
           spaceId={spaceId!}
           siteName={siteName}
           activeTab={activeTab}
-          setActiveTab={setActiveTab}
+          setActiveTab={handleTabChange}
           handleMergeEdits={handleMergeEdits}
+          isSaving={isSaving}
+          saveError={saveError}
         />
 
         {/* Editor Layout: Sidebar & Main Workspace Body */}
@@ -163,7 +222,7 @@ export default function SpaceEditorPage() {
             spaceId={spaceId!}
             spaceName={spaceName}
             selectedPage={selectedPage}
-            setSelectedPage={setSelectedPage}
+            setSelectedPage={handleSelectPage}
             setEditTitle={setEditTitle}
             setEditContent={setEditContent}
           />
@@ -187,7 +246,7 @@ export default function SpaceEditorPage() {
         onClose={() => setIsMergeModalOpen(false)}
         selectedPage={selectedPage}
         editTitle={editTitle}
-        editContent={editContent}
+        editContent={editContent ?? ""}
         activeTab={activeTab}
       />
     </div>

@@ -17,8 +17,8 @@ interface EditorCanvasProps {
   activeTab: "editor" | "preview"
   editTitle: string
   setEditTitle: (title: string) => void
-  editContent: string
-  setEditContent: (content: string) => void
+  editContent: string | null
+  setEditContent: (content: string | null) => void
 }
 
 /**
@@ -55,7 +55,12 @@ export default function EditorCanvas({
               <div className="border-b border-[#1f1f23] pb-4 text-xs text-[#8e8e93] flex items-center gap-4">
 
               </div>
-              {editContent ? (
+              {editContent === null ? (
+                <div className="flex flex-col items-center justify-center py-20 text-zinc-500 gap-2">
+                  <div className="animate-spin w-5 h-5 border-2 border-t-indigo-500 border-zinc-700 rounded-full" />
+                  <span className="text-xs">Loading preview...</span>
+                </div>
+              ) : editContent ? (
                 <article
                   className="prose prose-invert max-w-none text-zinc-300 leading-relaxed space-y-4 text-sm"
                   dangerouslySetInnerHTML={{
@@ -79,11 +84,18 @@ export default function EditorCanvas({
               />
 
               {/* WYSIWYG text editor component */}
-              <RichTextEditor
-                content={editContent}
-                onChange={setEditContent}
-                readOnly={false}
-              />
+              {editContent === null ? (
+                <div className="flex flex-col items-center justify-center py-20 text-zinc-500 gap-2">
+                  <div className="animate-spin w-5 h-5 border-2 border-t-indigo-500 border-zinc-700 rounded-full" />
+                  <span className="text-xs">Loading editor...</span>
+                </div>
+              ) : (
+                <RichTextEditor
+                  content={editContent}
+                  onChange={setEditContent}
+                  readOnly={false}
+                />
+              )}
             </div>
           )}
 
