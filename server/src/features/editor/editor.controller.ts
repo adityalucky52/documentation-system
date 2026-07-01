@@ -92,5 +92,61 @@ export class EditorController {
       return reply.status(404).send({ error: err.message })
     }
   }
+
+  /**
+   * mergeSpace Handler.
+   * 
+   * Purpose:
+   * Atomically publishes all draft page versions on `${spaceId}-draft` to `${spaceId}-main`
+   * and overrides the live master `Page` table contents.
+   * 
+   * Triggered by:
+   * - Frontend: MergeConfirmModal ("Confirm merge" trigger).
+   */
+  mergeSpace = async (
+    request: FastifyRequest<{ Params: { spaceId: string } }>,
+    reply: FastifyReply
+  ) => {
+    try {
+      const { spaceId } = request.params
+      const userId = request.userId!
+      const result = await this.service.mergeSpace(spaceId, userId)
+      return reply.send(result)
+    } catch (err: any) {
+      return reply.status(400).send({ error: err.message })
+    }
+  }
+
+  /**
+   * getSpaceMergeLogs Handler.
+   */
+  getSpaceMergeLogs = async (
+    request: FastifyRequest<{ Params: { spaceId: string } }>,
+    reply: FastifyReply
+  ) => {
+    try {
+      const { spaceId } = request.params
+      const logs = await this.service.getSpaceMergeLogs(spaceId)
+      return reply.send(logs)
+    } catch (err: any) {
+      return reply.status(400).send({ error: err.message })
+    }
+  }
+
+  /**
+   * getOrgMergeLogs Handler.
+   */
+  getOrgMergeLogs = async (
+    request: FastifyRequest<{ Params: { orgId: string } }>,
+    reply: FastifyReply
+  ) => {
+    try {
+      const { orgId } = request.params
+      const logs = await this.service.getOrgMergeLogs(orgId)
+      return reply.send(logs)
+    } catch (err: any) {
+      return reply.status(400).send({ error: err.message })
+    }
+  }
 }
 

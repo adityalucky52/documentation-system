@@ -100,5 +100,110 @@ export class EditorRepository {
       }
     })
   }
+
+  /**
+   * Reads Branch table to check if a specific branchId exists.
+   */
+  async findBranchById(branchId: string) {
+    return prisma.branch.findUnique({
+      where: { id: branchId }
+    })
+  }
+
+  /**
+   * Writes a new Branch entry.
+   */
+  async createBranch(branchId: string, name: string, spaceId: string) {
+    return prisma.branch.create({
+      data: {
+        id: branchId,
+        name,
+        spaceId
+      }
+    })
+  }
+
+  /**
+   * Merges all page versions from the draft branch to the main branch and live Page records.
+   */
+  async mergeBranchTransaction(spaceId: string, draftBranchId: string, mainBranchId: string, pageVersions: any[], userId: string) {
+    return prisma.$transaction(async (tx) => {
+      // Ensure target master branch entry exists
+      await tx.branch.upsert({
+        where: { id: mainBranchId },
+        update: {},
+        create: {
+          id: mainBranchId,
+          name: "main",
+          spaceId
+        }
+      })
+
+      for (const draftPv of pageVersions) {
+        // 1. Update primary live Page record
+        await tx.page.update({
+          where: { id: draftPv.pageId },
+          data: {
+            title: draftPv.title,
+            content: draftPv.content
+          }
+        })
+
+        // 2. Upsert historical/reference version on main branch
+        await tx.pageVersion.upsert({
+          where: {
+            pageId_branchId: {
+              pageId: draftPv.pageId,
+              branchId: mainBranchId
+            }
+          },
+          update: {
+            title: draftPv.title,
+            content: draftPv.content
+          },
+          create: {
+            pageId: draftPv.pageId,
+            branchId: mainBranchId,
+            title: draftPv.title,
+            content: draftPv.content
+          }
+        })
+      }
+
+      // 3. Log this publish event in the MergeLog table
+      await tx.mergeLog.create({
+        data: {
+          spaceId,
+          title: `Publish - ${new Date().toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}`,
+          mergedBy: userId
+        }
+      })
+    })
+  }
+
+  /**
+   * Reads MergeLog table for logs belonging to spaceId.
+   */
+  async findMergeLogsBySpaceId(spaceId: string) {
+    return prisma.mergeLog.findMany({
+      where: { spaceId },
+      orderBy: { createdAt: "desc" }
+    })
+  }
+
+  /**
+   * Reads MergeLog table for logs belonging to spaceIds array.
+   */
+  async findMergeLogsBySpaceIds(spaceIds: string[]) {
+    return prisma.mergeLog.findMany({
+      where: { spaceId: { in: spaceIds } },
+      include: {
+        space: {
+          include: { site: true }
+        }
+      },
+      orderBy: { createdAt: "desc" }
+    })
+  }
 }
 

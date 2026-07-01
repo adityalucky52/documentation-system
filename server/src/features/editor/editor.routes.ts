@@ -14,6 +14,7 @@ import { EditorController } from "./editor.controller.js"
  *    Supports optional query parameters like `?branchId=xxx` to fetch isolated drafts.
  * 2. POST `/spaces/:spaceId/pages` -> Appends a new Page record (triggered by sidebar "New page" button).
  * 3. PUT `/pages/:pageId` -> Updates a Page's content (triggered by debounced text editors autosave).
+ * 4. PUT `/spaces/:spaceId/merge` -> Atomically merges staging draft edits into main and master live Pages.
  * 
  * Middlewares:
  * preHandler Hook: Validates `x-user-id` authentication context.
@@ -34,5 +35,8 @@ export async function editorRoutes(fastify: FastifyInstance) {
   fastify.get("/spaces/:spaceId", controller.getSpace)
   fastify.post("/spaces/:spaceId/pages", controller.createPage)
   fastify.put("/pages/:pageId", controller.updatePage)
+  fastify.put("/spaces/:spaceId/merge", controller.mergeSpace)
+  fastify.get("/spaces/:spaceId/merge-logs", controller.getSpaceMergeLogs)
+  fastify.get("/orgs/:orgId/merge-logs", controller.getOrgMergeLogs)
 }
 

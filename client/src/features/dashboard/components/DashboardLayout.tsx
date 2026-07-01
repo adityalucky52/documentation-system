@@ -127,7 +127,7 @@ export default function DashboardLayout() {
               className={`flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors ${window.location.pathname.includes("/changes") ? "bg-[#1c1c1e] text-[#f4f4f5]" : "text-[#8e8e93] hover:text-white hover:bg-[#1a1a1e]"}`}
             >
               <GitPullRequest className="h-4 w-4" />
-              <span>Change requests</span>
+              <span>Publish history</span>
             </Link>
           </nav>
 

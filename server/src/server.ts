@@ -4,7 +4,6 @@ import { authRoutes } from "./features/auth/auth.routes.js"
 import { orgRoutes } from "./features/org/org.routes.js"
 import { sitesManagementRoutes } from "./features/sites-management/sites-management.routes.js"
 import { editorRoutes } from "./features/editor/editor.routes.js"
-import { changeRequestsRoutes } from "./features/change-requests/change-requests.routes.js"
 import { errorHandler } from "./lib/errorHandler.js"
 
 /**
@@ -38,7 +37,6 @@ await fastify.register(authRoutes, { prefix: "/api/auth" })
 await fastify.register(orgRoutes, { prefix: "/api/org" })
 await fastify.register(sitesManagementRoutes, { prefix: "/api/site" })
 await fastify.register(editorRoutes, { prefix: "/api/site" })
-await fastify.register(changeRequestsRoutes, { prefix: "/api/vc" }) // Version Control prefixes
 
 // Declare a default base health check route
 fastify.get("/", async (request, reply) => {

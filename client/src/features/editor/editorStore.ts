@@ -8,9 +8,12 @@ import { useSitesStore, type Page } from "../sites-management/sitesStore"
 interface EditorState {
   isLoading: boolean
   error: string | null
+  mergeLogs: any[]
 
   createPage: (spaceId: string, title: string, userId: string) => Promise<Page | null>
   updatePage: (pageId: string, title: string, content: string, userId: string) => Promise<Page | null>
+  fetchMergeLogs: (spaceId: string, userId: string) => Promise<void>
+  fetchOrgMergeLogs: (orgId: string, userId: string) => Promise<void>
 }
 
 // REST API Base route for documentation sites management
@@ -23,6 +26,7 @@ const API_URL = "http://localhost:5001/api/site"
 export const useEditorStore = create<EditorState>((set) => ({
   isLoading: false,
   error: null,
+  mergeLogs: [],
 
   /**
    * Action: Creates a new page document inside a space.
@@ -35,9 +39,7 @@ export const useEditorStore = create<EditorState>((set) => ({
   createPage: async (spaceId, title, userId) => {
     set({ isLoading: true, error: null })
     try {
-      // Dynamically import store to resolve circular TypeScript dependency issues
-      const { useChangeRequestStore } = await import("../change-requests/changeRequestStore")
-      const branchId = useChangeRequestStore.getState().activeBranchId
+      const branchId = `${spaceId}-draft`
 
       const response = await fetch(`${API_URL}/spaces/${spaceId}/pages`, {
         method: "POST",
@@ -74,9 +76,8 @@ export const useEditorStore = create<EditorState>((set) => ({
   updatePage: async (pageId, title, content, userId) => {
     set({ isLoading: true, error: null })
     try {
-      // Dynamic import to bypass circular reference warnings
-      const { useChangeRequestStore } = await import("../change-requests/changeRequestStore")
-      const branchId = useChangeRequestStore.getState().activeBranchId
+      const spaceId = useSitesStore.getState().currentSpace?.id
+      const branchId = spaceId ? `${spaceId}-draft` : undefined
 
       const response = await fetch(`${API_URL}/pages/${pageId}`, {
         method: "PUT",
@@ -102,6 +103,42 @@ export const useEditorStore = create<EditorState>((set) => ({
     } catch (err: any) {
       set({ error: err.message || "An unexpected error occurred", isLoading: false })
       return null
+    }
+  },
+
+  /**
+   * Action: Queries space merge logs history.
+   */
+  fetchMergeLogs: async (spaceId, userId) => {
+    set({ isLoading: true, error: null })
+    try {
+      const response = await fetch(`${API_URL}/spaces/${spaceId}/merge-logs`, {
+        method: "GET",
+        headers: { "x-user-id": userId }
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || "Failed to fetch merge logs")
+      set({ mergeLogs: data, isLoading: false })
+    } catch (err: any) {
+      set({ error: err.message || "An unexpected error occurred", isLoading: false })
+    }
+  },
+
+  /**
+   * Action: Queries all organization-wide merge logs.
+   */
+  fetchOrgMergeLogs: async (orgId, userId) => {
+    set({ isLoading: true, error: null })
+    try {
+      const response = await fetch(`${API_URL}/orgs/${orgId}/merge-logs`, {
+        method: "GET",
+        headers: { "x-user-id": userId }
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || "Failed to fetch organization merge logs")
+      set({ mergeLogs: data, isLoading: false })
+    } catch (err: any) {
+      set({ error: err.message || "An unexpected error occurred", isLoading: false })
     }
   },
 }))

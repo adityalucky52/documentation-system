@@ -88,7 +88,7 @@ model Space {
   site           Site            @relation(fields: [siteId], references: [id], onDelete: Cascade)
   pages          Page[]
   branches       Branch[]
-  changeRequests ChangeRequest[]
+  mergeLogs      MergeLog[]
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 }
@@ -113,19 +113,7 @@ model Page {
   updatedAt DateTime      @updatedAt
 }
 
-/**
- * Enum: ChangeRequestStatus
- * Represents the lifecycle stages of a Change Request branch.
- * - DRAFT: Edit isolates, only active inside editor context.
- * - OPEN: Ready for review and comparisons.
- * - MERGED: Merged into master Page, changes are published.
- * - CLOSED: Archived.
- */
-enum ChangeRequestStatus {
-  OPEN
-  MERGED
-  CLOSED
-}
+
 
 /**
  * Model: Branch
@@ -142,35 +130,11 @@ model Branch {
   spaceId              String
   space                Space           @relation(fields: [spaceId], references: [id], onDelete: Cascade)
   pageVersions         PageVersion[]
-  changeRequestsSource ChangeRequest[] @relation("SourceBranch")
-  changeRequestsTarget ChangeRequest[] @relation("TargetBranch")
   createdAt            DateTime        @default(now())
   updatedAt            DateTime        @updatedAt
 }
 
-/**
- * Model: ChangeRequest
- * Tracks pull-request-style reviews for merging a source Branch into a target Branch.
- * 
- * Relationships:
- * - Belongs to a Space (spaceId references Space.id).
- * - Has one source Branch (sourceBranchId) and one target Branch (targetBranchId).
- * - Triggered by: ChangeRequestSwitcher, RequestReviewModal, MergeConfirmModal.
- */
-model ChangeRequest {
-  id             String              @id
-  title          String
-  status         ChangeRequestStatus @default(OPEN)
-  spaceId        String
-  space          Space               @relation(fields: [spaceId], references: [id], onDelete: Cascade)
-  sourceBranchId String
-  sourceBranch   Branch              @relation("SourceBranch", fields: [sourceBranchId], references: [id], onDelete: Cascade)
-  targetBranchId String
-  targetBranch   Branch              @relation("TargetBranch", fields: [targetBranchId], references: [id], onDelete: Cascade)
-  creatorId      String
-  createdAt      DateTime            @default(now())
-  updatedAt      DateTime            @updatedAt
-}
+
 
 /**
  * Model: PageVersion
@@ -192,6 +156,19 @@ model PageVersion {
   updatedAt DateTime @updatedAt
 
   @@unique([pageId, branchId])
+}
+
+/**
+ * Model: MergeLog
+ * Tracks successful space-level publish events (copying draft versions to master).
+ */
+model MergeLog {
+  id        String   @id @default(uuid())
+  spaceId   String
+  space     Space    @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  title     String
+  mergedBy  String
+  createdAt DateTime @default(now())
 }
 
 

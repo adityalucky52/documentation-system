@@ -8,7 +8,7 @@ import { useEditorStore } from "../editorStore"
 import EditorSidebar from "./EditorSidebar"
 import EditorHeader from "./EditorHeader"
 import EditorCanvas from "./EditorCanvas"
-import MergeConfirmModal from "../../change-requests/components/MergeConfirmModal"
+import MergeConfirmModal from "./MergeConfirmModal"
 import { ArrowLeft } from "lucide-react"
 
 /**
@@ -56,12 +56,13 @@ export default function SpaceEditorPage() {
   // Modal Dialog states
   const [isMergeModalOpen, setIsMergeModalOpen] = useState(false)
 
-  // Effect 1: Fetch space page tree on mount or spaceId/user change
+  // Effect 1: Fetch space page tree on mount, spaceId/user change, or activeTab switch
   useEffect(() => {
     if (spaceId && user) {
-      fetchSpace(spaceId, user.id)
+      const branchId = activeTab === "preview" ? `${spaceId}-main` : `${spaceId}-draft`
+      fetchSpace(spaceId, user.id, branchId)
     }
-  }, [spaceId, user, fetchSpace])
+  }, [spaceId, user, activeTab, fetchSpace])
 
   // Effect 2: Automatically select the first page of a space when space data first loads
   useEffect(() => {

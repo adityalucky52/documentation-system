@@ -1,4 +1,5 @@
 import { EditorRepository } from "./editor.repository.js"
+import { prisma } from "../../lib/prisma.js"
 
 /**
  * EditorService.
@@ -26,6 +27,9 @@ export class EditorService {
 
     let pages: any[] = []
     if (branchId) {
+      // Ensure the branch and page version baselines exist before loading
+      await this.ensureBranchExists(spaceId, branchId)
+
       // Fetch draft versions for the selected change request branch
       const pageVersions = await this.repository.findPageVersionsByBranchId(branchId)
       pages = pageVersions.map(pv => ({
@@ -100,12 +104,101 @@ export class EditorService {
         title: updatedVersion.title,
         content: updatedVersion.content,
         spaceId: page.spaceId,
+        createdAt: page.createdAt,
         updatedAt: updatedVersion.updatedAt
       }
+    } else {
+      // Update live page directly
+      const updatedPage = await this.repository.updatePage(pageId, targetTitle, targetContent)
+      return updatedPage
+    }
+  }
+
+  /**
+   * Helper: ensureBranchExists
+   * 
+   * Purpose:
+   * Guarantees that a Branch entry exists in the DB, and if there are no page versions,
+   * seeds the branch with page versions cloned from the live Page table.
+   */
+  async ensureBranchExists(spaceId: string, branchId: string) {
+    let branch = await this.repository.findBranchById(branchId)
+    if (!branch) {
+      const name = branchId.includes("-main") ? "main" : "draft"
+      branch = await this.repository.createBranch(branchId, name, spaceId)
     }
 
-    // Update live page directly
-    return this.repository.updatePage(pageId, targetTitle, targetContent)
+    const pageVersions = await this.repository.findPageVersionsByBranchId(branchId)
+    if (pageVersions.length === 0) {
+      // Seed with live page versions
+      const livePages = await this.repository.findPagesBySpaceId(spaceId)
+      for (const page of livePages) {
+        await this.repository.upsertPageVersion(page.id, branchId, page.title, page.content)
+      }
+    }
+  }
+
+  /**
+   * mergeSpace Business logic.
+   * 
+   * Purpose:
+   * Atomically publishes all draft page versions on `${spaceId}-draft` to `${spaceId}-main`
+   * and overrides the live `Page` table contents.
+   */
+  async mergeSpace(spaceId: string, userId: string) {
+    const draftBranchId = `${spaceId}-draft`
+    const mainBranchId = `${spaceId}-main`
+
+    // Ensure baseline branch references exist
+    await this.ensureBranchExists(spaceId, draftBranchId)
+    await this.ensureBranchExists(spaceId, mainBranchId)
+
+    // Pull modifications from draft branch
+    const pageVersions = await this.repository.findPageVersionsByBranchId(draftBranchId)
+    if (pageVersions.length === 0) {
+      return { message: "No changes to merge" }
+    }
+
+    // Execute atomic merge transaction
+    await this.repository.mergeBranchTransaction(spaceId, draftBranchId, mainBranchId, pageVersions, userId)
+    return { message: "Workspace merged to live successfully" }
+  }
+
+  /**
+   * Retrieves all merge logs for a specific Space.
+   */
+  async getSpaceMergeLogs(spaceId: string) {
+    return this.repository.findMergeLogsBySpaceId(spaceId)
+  }
+
+  /**
+   * Retrieves all merge logs for an Organization by finding all spaces matching sites inside the org.
+   */
+  async getOrgMergeLogs(orgId: string) {
+    // 1. Find all sites in the organization
+    // Wait, let's make sure we have access to site query.
+    // Let's use EditorRepository to query sites or spaces!
+    // Since sites are grouped under orgs, we can query Sites and Spaces.
+    // Let's add helper findSitesByOrgId / findSpacesBySiteIds inside EditorRepository?
+    // Wait! sitesStore and changeRequestsRepository already have findSitesByOrgId and findSpacesBySiteIds!
+    // Let's see if we can implement them in EditorRepository or check if we can query them directly.
+    // Yes! Let's write them in EditorRepository or query prisma directly in repository.
+    // We already added findSitesByOrgId and findSpacesBySiteIds in ChangeRequestsRepository,
+    // so let's check if we can import them or write them directly.
+    // Writing them directly in EditorRepository is cleanest! Let's see: we did add:
+    // findSitesByOrgId and findSpacesBySiteIds. Wait! We viewed them in ChangeRequestsRepository.
+    // Let's implement them directly in EditorRepository so it's self-contained:
+    // Oh, wait, we can just query spaces that belong to sites in the organization.
+    // Let's see how:
+    const spaces = await prisma.space.findMany({
+      where: {
+        site: {
+          organizationId: orgId
+        }
+      },
+      select: { id: true }
+    })
+    const spaceIds = spaces.map(s => s.id)
+    return this.repository.findMergeLogsBySpaceIds(spaceIds)
   }
 }
-
