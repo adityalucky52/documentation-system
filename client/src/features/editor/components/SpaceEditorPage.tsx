@@ -188,6 +188,7 @@ export default function SpaceEditorPage() {
         selectedPage={selectedPage}
         editTitle={editTitle}
         editContent={editContent}
+        activeTab={activeTab}
       />
     </div>
   )

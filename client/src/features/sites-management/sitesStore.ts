@@ -185,19 +185,12 @@ export const useSitesStore = create<SitesState>((set) => ({
    * Action: Loads full details of a specific workspace space, including nested pages.
    * 
    * Dynamic Import & Circular Dependency Mitigation:
-   * Dynamically loads `useChangeRequestStore` inside the function runtime. This resolves
-   * TypeScript compiler circular imports (where sitesStore needs changeRequestStore, and vice-versa).
    */
   fetchSpace: async (spaceId, userId, branchId) => {
     set({ isLoading: true, error: null })
     try {
-      // Lazy load to bypass circular imports
-      const { useChangeRequestStore } = await import("../change-requests/changeRequestStore")
-      
-      // Fallback: If no custom branchId is explicitly passed, fetch the store's current active branch (Git mode context)
-      const resolvedBranchId = branchId ?? useChangeRequestStore.getState().activeBranchId
-      const url = resolvedBranchId
-        ? `${API_URL}/spaces/${spaceId}?branchId=${resolvedBranchId}`
+      const url = branchId
+        ? `${API_URL}/spaces/${spaceId}?branchId=${branchId}`
         : `${API_URL}/spaces/${spaceId}`
 
       const response = await fetch(url, {

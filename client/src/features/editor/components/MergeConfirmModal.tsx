@@ -20,6 +20,7 @@ interface MergeConfirmModalProps {
   selectedPage: Page | null
   editTitle: string
   editContent: string
+  activeTab: "editor" | "preview"
 }
 
 /**
@@ -40,6 +41,7 @@ export default function MergeConfirmModal({
   selectedPage,
   editTitle,
   editContent,
+  activeTab,
 }: MergeConfirmModalProps) {
   const { user } = useAuthStore()
   // Connect editing actions to commit latest draft updates
@@ -72,13 +74,15 @@ export default function MergeConfirmModal({
           "Content-Type": "application/json",
           "x-user-id": user.id,
         },
+        body: JSON.stringify({}),
       })
 
       setIsMerging(false)
       if (response.ok) {
         setMergeSuccess(true)
-        // Refetch main space page lists (live/preview branch)
-        await fetchSpace(spaceId, user.id)
+        // Refetch space pages using the branch corresponding to activeTab
+        const branchId = activeTab === "preview" ? `${spaceId}-main` : `${spaceId}-draft`
+        await fetchSpace(spaceId, user.id, branchId)
       }
     } catch {
       setIsMerging(false)

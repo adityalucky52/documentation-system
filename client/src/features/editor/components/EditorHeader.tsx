@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom"
-import { BookOpen, Eye, GitMerge, Share2 } from "lucide-react"
+import { BookOpen, Eye, GitMerge, } from "lucide-react"
 
 /**
  * EditorHeader Props.
@@ -67,8 +67,8 @@ export default function EditorHeader({
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`px-2.5 py-1.5 text-[11px] font-semibold rounded-md flex items-center gap-1 transition-colors cursor-pointer ${activeTab === tab.id
-                ? "text-white bg-[#1c1c1e]"
-                : "text-[#8e8e93] hover:text-white hover:bg-[#161618]"
+              ? "text-white bg-[#1c1c1e]"
+              : "text-[#8e8e93] hover:text-white hover:bg-[#161618]"
               }`}
           >
             {tab.icon}
