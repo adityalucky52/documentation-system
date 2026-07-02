@@ -8,6 +8,7 @@ import DashboardPage from "./features/dashboard/DashboardPage"
 import SiteSetupPage from "./features/sites-management/components/SiteSetupPage"
 import SpaceEditorPage from "./features/editor/components/SpaceEditorPage"
 import GlobalChangeRequestsPage from "./features/change-requests/components/GlobalChangeRequestsPage"
+import PublicSpaceReaderPage from "./features/public/PublicSpaceReaderPage"
 
 /**
  * Main application router configuration using React Router DOM.
@@ -36,6 +37,9 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/create-organization" element={<CreateOrganizationPage />} />
+        
+        {/* Public view-only reader for documentation space */}
+        <Route path="/share/s/:spaceId" element={<PublicSpaceReaderPage />} />
         
         {/* DashboardLayout establishes context for the organization (Navbar, Sidebar, etc.) */}
         <Route path="/o/:orgId" element={<DashboardLayout />}>

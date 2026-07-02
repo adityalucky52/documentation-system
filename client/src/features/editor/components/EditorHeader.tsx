@@ -1,5 +1,6 @@
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { BookOpen, Eye, GitMerge, } from "lucide-react"
+import { BookOpen, Eye, GitMerge, Sun, Moon, Share2 } from "lucide-react"
 
 /**
  * EditorHeader Props.
@@ -34,6 +35,7 @@ interface EditorHeaderProps {
  */
 export default function EditorHeader({
   orgId,
+  spaceId,
   siteName,
   activeTab,
   setActiveTab,
@@ -42,23 +44,52 @@ export default function EditorHeader({
   saveError,
 }: EditorHeaderProps) {
   const navigate = useNavigate()
+  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"))
+  const [copied, setCopied] = useState(false)
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains("dark"))
+    })
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] })
+    return () => observer.disconnect()
+  }, [])
+
+  const toggleTheme = () => {
+    if (document.documentElement.classList.contains("dark")) {
+      document.documentElement.classList.remove("dark")
+      localStorage.setItem("theme", "light")
+      setIsDark(false)
+    } else {
+      document.documentElement.classList.add("dark")
+      localStorage.setItem("theme", "dark")
+      setIsDark(true)
+    }
+  }
+
+  const handleShareClick = () => {
+    const publicUrl = `${window.location.origin}/share/s/${spaceId}`
+    navigator.clipboard.writeText(publicUrl)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   return (
-    <div className="flex items-center justify-between px-6 py-2.5 border-b border-[#1f1f23] bg-[#0e0e11] shrink-0 gap-3 font-sans">
+    <div className="flex items-center justify-between px-6 py-2.5 border-b border-border bg-card shrink-0 gap-3 font-sans transition-colors">
 
       {/* Left Pane: Breadcrumbs */}
-      <div className="flex items-center gap-2 text-xs font-semibold text-[#8e8e93] min-w-0 flex-1 overflow-hidden">
+      <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground min-w-0 flex-1 overflow-hidden">
         <span
-          className="hover:text-white cursor-pointer whitespace-nowrap shrink-0"
+          className="hover:text-foreground cursor-pointer whitespace-nowrap shrink-0 transition-colors"
           onClick={() => navigate(`/o/${orgId}/home`)}
         >
           Docs sites
         </span>
         <span className="shrink-0">/</span>
-        <span className="text-[#818cf8] bg-[#312e81]/30 px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wide shrink-0">
+        <span className="text-primary bg-primary/10 px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wide shrink-0">
           {siteName[0]}
         </span>
-        <span className="text-white font-medium truncate max-w-[100px] shrink">{siteName}</span>
+        <span className="text-foreground font-medium truncate max-w-[100px] shrink">{siteName}</span>
       </div>
 
       {/* Center Pane: Editor / Preview tabs */}
@@ -70,10 +101,11 @@ export default function EditorHeader({
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-2.5 py-1.5 text-[11px] font-semibold rounded-md flex items-center gap-1 transition-colors cursor-pointer ${activeTab === tab.id
-              ? "text-white bg-[#1c1c1e]"
-              : "text-[#8e8e93] hover:text-white hover:bg-[#161618]"
-              }`}
+            className={`px-2.5 py-1.5 text-[11px] font-semibold rounded-md flex items-center gap-1 transition-colors cursor-pointer ${
+              activeTab === tab.id
+                ? "text-foreground bg-accent/60"
+                : "text-muted-foreground hover:text-foreground hover:bg-accent/30"
+            }`}
           >
             {tab.icon}
             <span>{tab.label}</span>
@@ -88,7 +120,7 @@ export default function EditorHeader({
           {isSaving ? (
             <>
               <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-              <span className="text-zinc-500 font-medium">Saving...</span>
+              <span className="text-muted-foreground font-medium">Saving...</span>
             </>
           ) : saveError ? (
             <>
@@ -98,12 +130,34 @@ export default function EditorHeader({
           ) : (
             <>
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse duration-1000" />
-              <span className="text-zinc-500">Saved</span>
+              <span className="text-muted-foreground">Saved</span>
             </>
           )}
         </div>
 
+        {/* Theme Mode Switcher */}
+        <button
+          onClick={toggleTheme}
+          className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-accent/40 rounded-lg cursor-pointer transition-colors"
+          title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+        >
+          {isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+        </button>
+
         <div className="flex items-center gap-2 shrink-0">
+          {/* Share Button */}
+          <button
+            onClick={handleShareClick}
+            className={`pl-2.5 pr-2.5 py-1.5 text-[11px] font-bold rounded-lg flex items-center gap-1.5 transition-all cursor-pointer shadow-sm whitespace-nowrap h-[28px] border border-border ${
+              copied
+                ? "bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-500"
+                : "bg-background text-foreground hover:bg-accent/40"
+            }`}
+          >
+            <Share2 className="w-3.5 h-3.5 shrink-0" />
+            <span>{copied ? "Copied!" : "Share"}</span>
+          </button>
+
           {/* Merge Button */}
           <button
             onClick={handleMergeEdits}
