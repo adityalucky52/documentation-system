@@ -9,6 +9,7 @@ import { BookOpen, Globe, Upload } from "lucide-react"
 interface SiteOnboardingOptionsProps {
   siteName: string
   onSetupBlank: () => void
+  onSetupTemplate: () => void
   onOpenImportModal: () => void
 }
 
@@ -29,6 +30,7 @@ interface SiteOnboardingOptionsProps {
 export default function SiteOnboardingOptions({
   siteName,
   onSetupBlank,
+  onSetupTemplate,
   onOpenImportModal
 }: SiteOnboardingOptionsProps) {
   return (
@@ -52,7 +54,10 @@ export default function SiteOnboardingOptions({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         
         {/* Docs Template Option */}
-        <div className="flex flex-col bg-[#161618] border border-[#222225] hover:border-[#323236] rounded-xl overflow-hidden group cursor-pointer transition-all hover:translate-y-[-2px]">
+        <div 
+          onClick={onSetupTemplate}
+          className="flex flex-col bg-[#161618] border border-[#222225] hover:border-[#323236] rounded-xl overflow-hidden group cursor-pointer transition-all hover:translate-y-[-2px]"
+        >
           {/* Preview Illustration */}
           <div className="h-[150px] bg-[#0c0c0e] border-b border-[#222225] flex items-center justify-center p-4 relative overflow-hidden shrink-0">
             <div className="w-[180px] h-[100px] bg-[#161618] border border-[#222225] rounded-lg p-2.5 flex flex-col gap-1.5 shadow-lg group-hover:scale-[1.02] transition-transform">

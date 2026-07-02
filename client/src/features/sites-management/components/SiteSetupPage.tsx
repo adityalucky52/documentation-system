@@ -34,7 +34,7 @@ export default function SiteSetupPage() {
   const navigate = useNavigate()
   
   // Sites Store integration for retrieving matching site structure and setup actions
-  const { sites, setupSite, deleteSite, publishSite } = useSitesStore()
+  const { sites, setupSite, deleteSite, publishSite, error } = useSitesStore()
   // Auth Store integration for active user headers
   const { user } = useAuthStore()
   
@@ -53,6 +53,14 @@ export default function SiteSetupPage() {
   const handleSetupBlank = async () => {
     if (!site || !user) return
     await setupSite(site.id, "blank", user.id)
+  }
+
+  /**
+   * Action: Sets up the site using the Prisma Docs template.
+   */
+  const handleSetupTemplate = async () => {
+    if (!site || !user) return
+    await setupSite(site.id, "template", user.id)
   }
 
   /**
@@ -110,9 +118,17 @@ export default function SiteSetupPage() {
   if (!site.isSetup) {
     return (
       <>
+        {error && (
+          <div className="max-w-[1012px] w-full mx-auto px-8 mt-6">
+            <div className="bg-[#2c1515] border border-[#ff453a]/30 text-[#ff453a] text-xs font-medium px-4 py-3 rounded-lg flex items-center justify-between">
+              <span>Error: {error}</span>
+            </div>
+          </div>
+        )}
         <SiteOnboardingOptions
           siteName={siteName}
           onSetupBlank={handleSetupBlank}
+          onSetupTemplate={handleSetupTemplate}
           onOpenImportModal={() => setIsImportModalOpen(true)}
         />
 
