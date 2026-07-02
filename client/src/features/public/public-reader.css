@@ -1,0 +1,321 @@
+/* Custom Documentation Reader Stylesheet (Prisma-Docs Inspired) */
+
+/* 1. Theme Configuration & Variables Override */
+:root {
+  --docs-emerald: #10b981;
+  --docs-emerald-hover: #059669;
+  --docs-emerald-bg: rgba(16, 185, 129, 0.08);
+  --docs-emerald-border: rgba(16, 185, 129, 0.25);
+  
+  --docs-bg: #ffffff;
+  --docs-header-bg: rgba(255, 255, 255, 0.85);
+  --docs-sidebar-bg: #fcfcfd;
+  --docs-border: #e2e8f0;
+  --docs-text-main: #334155;
+  --docs-text-heading: #0f172a;
+  --docs-text-muted: #64748b;
+  
+  --docs-code-bg: #f8fafc;
+  --docs-code-text: #0f172a;
+  --docs-pre-bg: #0f172a;
+  --docs-pre-border: #1e293b;
+}
+
+.dark {
+  --docs-bg: #0b0c10;
+  --docs-header-bg: rgba(11, 12, 16, 0.85);
+  --docs-sidebar-bg: #0e1015;
+  --docs-border: #1e293b;
+  --docs-text-main: #94a3b8;
+  --docs-text-heading: #f8fafc;
+  --docs-text-muted: #64748b;
+  
+  --docs-code-bg: #1e293b;
+  --docs-code-text: #e2e8f0;
+  --docs-pre-bg: #090a0f;
+  --docs-pre-border: #1e293b;
+}
+
+/* 2. Structured Layouts */
+.docs-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  background-color: var(--docs-bg);
+  color: var(--docs-text-main);
+  transition: background-color 0.2s, color 0.2s;
+  overflow: hidden;
+}
+
+.docs-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--docs-border);
+  background-color: var(--docs-header-bg);
+  backdrop-filter: blur(8px);
+  z-index: 40;
+}
+
+.docs-main-layout {
+  display: flex;
+  flex: 1;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* 3. Sidebars */
+.docs-left-sidebar {
+  width: 260px;
+  border-right: 1px solid var(--docs-border);
+  background-color: var(--docs-sidebar-bg);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.docs-right-sidebar {
+  width: 220px;
+  border-left: 1px solid var(--docs-border);
+  padding: 24px 16px;
+  display: none;
+  overflow-y: auto;
+}
+
+@media (min-width: 1024px) {
+  .docs-right-sidebar {
+    display: block;
+  }
+}
+
+/* 4. Navigation Links */
+.toc-heading {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--docs-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0 8px;
+  margin-bottom: 8px;
+}
+
+.toc-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--docs-text-main);
+  border-radius: 6px;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.toc-link:hover {
+  color: var(--docs-text-heading);
+  background-color: var(--docs-code-bg);
+}
+
+.toc-link.active {
+  color: var(--docs-emerald);
+  background-color: var(--docs-emerald-bg);
+  border: 1px solid var(--docs-emerald-border);
+}
+
+/* 5. In-Page Outline List */
+.outline-link {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--docs-text-muted);
+  padding: 4px 8px;
+  border-left: 2px solid transparent;
+  transition: all 0.15s ease;
+  text-decoration: none;
+}
+
+.outline-link:hover {
+  color: var(--docs-text-heading);
+}
+
+.outline-link.active {
+  color: var(--docs-emerald);
+  border-left-color: var(--docs-emerald);
+  padding-left: 12px;
+}
+
+.outline-h3 {
+  padding-left: 16px;
+}
+
+.outline-h3.active {
+  padding-left: 20px;
+}
+
+/* 6. Styled Markdown Body Typography */
+.docs-article {
+  font-family: var(--sans);
+  line-height: 1.7;
+  font-size: 15px;
+  color: var(--docs-text-main);
+}
+
+.docs-article h1 {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: var(--docs-text-heading);
+  letter-spacing: -0.025em;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  line-height: 1.2;
+}
+
+.docs-article h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--docs-text-heading);
+  letter-spacing: -0.02em;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--docs-border);
+  padding-bottom: 0.5rem;
+  line-height: 1.3;
+}
+
+.docs-article h3 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--docs-text-heading);
+  letter-spacing: -0.01em;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.4;
+}
+
+.docs-article p {
+  margin-top: 0;
+  margin-bottom: 1.25rem;
+}
+
+/* Inline Code highlights */
+.docs-article code {
+  font-family: var(--mono);
+  font-size: 0.85em;
+  background-color: var(--docs-code-bg);
+  color: var(--docs-emerald);
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+  border: 1px solid var(--docs-border);
+  font-weight: 500;
+}
+
+/* Multiline Code blocks */
+.docs-article pre {
+  position: relative;
+  background-color: var(--docs-pre-bg);
+  border: 1px solid var(--docs-pre-border);
+  border-radius: 8px;
+  padding: 16px;
+  margin: 1.5rem 0;
+  overflow-x: auto;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.docs-article pre code {
+  background-color: transparent !important;
+  color: #e2e8f0 !important;
+  border: none !important;
+  padding: 0 !important;
+  font-size: 13px !important;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+/* Lists formatting */
+.docs-article ul, .docs-article ol {
+  margin-top: 0;
+  margin-bottom: 1.25rem;
+  padding-left: 24px;
+}
+
+.docs-article ul {
+  list-style-type: disc;
+}
+
+.docs-article ol {
+  list-style-type: decimal;
+}
+
+.docs-article li {
+  margin-top: 0.5rem;
+}
+
+/* Quotes formatting */
+.docs-article blockquote {
+  border-left: 4px solid var(--docs-emerald);
+  background-color: var(--docs-emerald-bg);
+  padding: 12px 20px;
+  margin: 1.5rem 0;
+  border-radius: 0 8px 8px 0;
+}
+
+.docs-article blockquote p {
+  margin: 0;
+  font-style: italic;
+  font-weight: 500;
+  color: var(--docs-text-heading);
+}
+
+/* 7. Code Block Copy Overlay Button styling */
+.copy-code-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #94a3b8;
+  background-color: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(71, 85, 105, 0.3);
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s, background-color 0.15s, color 0.15s;
+  z-index: 10;
+}
+
+.docs-article pre:hover .copy-code-btn {
+  opacity: 1;
+}
+
+.copy-code-btn:hover {
+  background-color: #334155;
+  color: #f8fafc;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--docs-border);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--docs-text-muted);
+}
