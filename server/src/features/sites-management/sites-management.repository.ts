@@ -127,5 +127,23 @@ export class SitesManagementRepository {
       where: { id: siteId }
     })
   }
+
+  /**
+   * Updates isPublished column on Site record.
+   * Triggered when a user clicks the Publish button.
+   */
+  async updateSitePublishStatus(siteId: string, isPublished: boolean) {
+    return prisma.site.update({
+      where: { id: siteId },
+      data: { isPublished },
+      include: {
+        spaces: {
+          include: {
+            pages: true
+          }
+        }
+      }
+    })
+  }
 }
 

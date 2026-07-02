@@ -104,5 +104,25 @@ export class SitesManagementController {
       return reply.status(404).send({ error: err.message })
     }
   }
+
+  /**
+   * publishSite Handler.
+   * 
+   * Purpose:
+   * Marks a site as public/published.
+   */
+  publishSite = async (
+    request: FastifyRequest<{ Params: { siteId: string } }>,
+    reply: FastifyReply
+  ) => {
+    try {
+      const { siteId } = request.params
+      const site = await this.service.publishSite(siteId)
+      return reply.send({ message: "Site published successfully", site })
+    } catch (err: any) {
+      const statusCode = err.message === "Site not found" ? 404 : 400
+      return reply.status(statusCode).send({ error: err.message })
+    }
+  }
 }
 

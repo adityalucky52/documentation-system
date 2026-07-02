@@ -25,6 +25,12 @@ export class PublicController {
       const { spaceId } = request.params
       // Fetch public/live space (without branchId)
       const space = await this.service.getSpace(spaceId)
+
+      // Validate that parent site has been published
+      if (!space.site || !space.site.isPublished) {
+        return reply.status(403).send({ error: "This documentation site is not published" })
+      }
+
       return reply.send(space)
     } catch (err: any) {
       return reply.status(404).send({ error: err.message })

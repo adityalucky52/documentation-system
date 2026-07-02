@@ -82,5 +82,18 @@ export class SitesManagementService {
     await this.repository.deleteSite(siteId)
     return { message: "Site deleted successfully" }
   }
+
+  /**
+   * publishSite Business logic.
+   * 
+   * Marks a site as published.
+   */
+  async publishSite(siteId: string) {
+    const site = await this.repository.findSiteById(siteId)
+    if (!site) {
+      throw new Error("Site not found")
+    }
+    return this.repository.updateSitePublishStatus(siteId, true)
+  }
 }
 

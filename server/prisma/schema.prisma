@@ -66,6 +66,7 @@ model Site {
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   spaces         Space[]
   isSetup        Boolean      @default(false) // Toggle between template onboarding checks vs dashboard overview tabs
+  isPublished    Boolean      @default(false) // Toggle to make site's spaces public to external readers
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 }

@@ -7,6 +7,7 @@ import { Globe, ChevronRight } from "lucide-react"
  */
 interface SiteOverviewCardProps {
   siteName: string
+  isPublished: boolean
   spaces: Array<{ id: string; name: string }> | undefined
 }
 
@@ -21,7 +22,7 @@ interface SiteOverviewCardProps {
  * 2. Title & Status: Displays unpublished/public pill indicators.
  * 3. Site structure: Lists all spaces inside the site.
  */
-export default function SiteOverviewCard({ siteName, spaces }: SiteOverviewCardProps) {
+export default function SiteOverviewCard({ siteName, isPublished, spaces }: SiteOverviewCardProps) {
   return (
     <div className="lg:col-span-4 flex flex-col gap-6 font-sans">
       <div className="bg-[#161618] border border-[#222225] rounded-xl overflow-hidden p-5 flex flex-col gap-6">
@@ -42,11 +43,17 @@ export default function SiteOverviewCard({ siteName, spaces }: SiteOverviewCardP
           <h2 className="text-lg font-semibold text-white tracking-tight">{siteName}</h2>
           
           <div className="flex flex-wrap items-center gap-4 text-xs font-semibold">
-            {/* Hardcoded state status tags */}
-            <div className="flex items-center gap-1.5 text-[#e0a800]">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#e0a800]"></span>
-              <span>Unpublished</span>
-            </div>
+            {isPublished ? (
+              <div className="flex items-center gap-1.5 text-[#34c759]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#34c759]"></span>
+                <span>Published</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 text-[#e0a800]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#e0a800]"></span>
+                <span>Unpublished</span>
+              </div>
+            )}
             <div className="flex items-center gap-1.5 text-[#8e8e93]">
               <Globe className="h-3.5 w-3.5" />
               <span>Public</span>

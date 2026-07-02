@@ -9,6 +9,7 @@ import SiteDashboardHeader from "./SiteDashboardHeader"
 import SiteOverviewCard from "./SiteOverviewCard"
 import SiteSettingsPanel from "./SiteSettingsPanel"
 import SiteGetStartedChecklist from "./SiteGetStartedChecklist"
+import SitePublishPanel from "./SitePublishPanel"
 
 /**
  * SiteSetupPage Component.
@@ -33,7 +34,7 @@ export default function SiteSetupPage() {
   const navigate = useNavigate()
   
   // Sites Store integration for retrieving matching site structure and setup actions
-  const { sites, setupSite, deleteSite } = useSitesStore()
+  const { sites, setupSite, deleteSite, publishSite } = useSitesStore()
   // Auth Store integration for active user headers
   const { user } = useAuthStore()
   
@@ -88,6 +89,14 @@ export default function SiteSetupPage() {
     }
   }
 
+  /**
+   * Action: Publishes the site.
+   */
+  const handlePublishSite = async () => {
+    if (!site || !user) return
+    await publishSite(site.id, user.id)
+  }
+
   // Error boundary: Site does not exist in store list
   if (!site) {
     return (
@@ -131,11 +140,13 @@ export default function SiteSetupPage() {
       <div className="max-w-[1200px] w-full mx-auto px-8 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
         
         {/* Left Column: Overview Details Card (Displays site meta statistics, spaces size count) */}
-        <SiteOverviewCard siteName={siteName} spaces={site.spaces} />
+        <SiteOverviewCard siteName={siteName} isPublished={site.isPublished} spaces={site.spaces} />
 
         {/* Right Column: Dynamic rendering based on active tab */}
         {activeTab === "settings" ? (
           <SiteSettingsPanel onDeleteSite={handleDeleteSite} />
+        ) : activeTab === "publish" ? (
+          <SitePublishPanel site={site} onPublish={handlePublishSite} />
         ) : (
           <SiteGetStartedChecklist onStartFirstChangeRequest={handleStartFirstChangeRequest} />
         )}

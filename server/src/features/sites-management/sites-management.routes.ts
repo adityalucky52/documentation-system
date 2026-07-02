@@ -66,5 +66,6 @@ export async function sitesManagementRoutes(fastify: FastifyInstance) {
   fastify.get("/", controller.getSites)
   fastify.post("/:siteId/setup", { schema: setupSiteSchema }, controller.setupSite)
   fastify.delete("/:siteId", controller.deleteSite)
+  fastify.post("/:siteId/publish", controller.publishSite)
 }
 

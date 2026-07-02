@@ -35,6 +35,7 @@ export interface Site {
   id: string
   name: string
   isSetup: boolean
+  isPublished: boolean
   spaces?: Space[]
   updatedAt: string
 }
@@ -55,6 +56,7 @@ interface SitesState {
   setupSite: (siteId: string, type: string, userId: string, importData?: { title: string; content: string }) => Promise<boolean>
   fetchSpace: (spaceId: string, userId: string, branchId?: string) => Promise<void>
   deleteSite: (siteId: string, userId: string) => Promise<boolean>
+  publishSite: (siteId: string, userId: string) => Promise<boolean>
 }
 
 // REST API Base route for documentation sites management
@@ -94,6 +96,7 @@ export const useSitesStore = create<SitesState>((set) => ({
         id: site.id,
         name: site.name,
         isSetup: site.isSetup,
+        isPublished: site.isPublished,
         spaces: site.spaces,
         updatedAt: new Date(site.updatedAt).toLocaleDateString(undefined, {
           month: "short",
@@ -125,12 +128,13 @@ export const useSitesStore = create<SitesState>((set) => ({
       if (!response.ok) throw new Error(data.error || "Failed to create site")
 
       const newSite: Site = {
-        id: data.site.id,
-        name: data.site.name,
-        isSetup: data.site.isSetup,
-        spaces: data.site.spaces || [],
-        updatedAt: "now",
-      }
+          id: data.site.id,
+          name: data.site.name,
+          isSetup: data.site.isSetup,
+          isPublished: data.site.isPublished || false,
+          spaces: data.site.spaces || [],
+          updatedAt: "now",
+        }
 
       // Prepend the new site to the active lists array
       set((state) => ({ sites: [newSite, ...state.sites], isLoading: false }))
@@ -160,6 +164,7 @@ export const useSitesStore = create<SitesState>((set) => ({
         id: data.site.id,
         name: data.site.name,
         isSetup: data.site.isSetup,
+        isPublished: data.site.isPublished || false,
         spaces: data.site.spaces || [],
         updatedAt: new Date(data.site.updatedAt).toLocaleDateString(undefined, {
           month: "short",
@@ -221,6 +226,33 @@ export const useSitesStore = create<SitesState>((set) => ({
 
       // Remove deleted item from the store's sites array
       set((state) => ({ sites: state.sites.filter((s) => s.id !== siteId), isLoading: false }))
+      return true
+    } catch (err: any) {
+      set({ error: err.message || "An unexpected error occurred", isLoading: false })
+      return false
+    }
+  },
+
+  /**
+   * Action: Publish a documentation site to make its spaces accessible to the public.
+   */
+  publishSite: async (siteId, userId) => {
+    set({ isLoading: true, error: null })
+    try {
+      const response = await fetch(`${API_URL}/${siteId}/publish`, {
+        method: "POST",
+        headers: { "x-user-id": userId },
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || "Failed to publish site")
+
+      // Update isPublished to true for this site in local state
+      set((state) => ({
+        sites: state.sites.map((s) =>
+          s.id === siteId ? { ...s, isPublished: true } : s
+        ),
+        isLoading: false,
+      }))
       return true
     } catch (err: any) {
       set({ error: err.message || "An unexpected error occurred", isLoading: false })
