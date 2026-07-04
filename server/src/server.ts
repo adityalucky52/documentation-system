@@ -5,6 +5,7 @@ import { orgRoutes } from "./features/org/org.routes.js"
 import { sitesManagementRoutes } from "./features/sites-management/sites-management.routes.js"
 import { editorRoutes } from "./features/editor/editor.routes.js"
 import { publicRoutes } from "./features/public/public.routes.js"
+import { templatesRoutes } from "./features/templates/templates.routes.js"
 import { errorHandler } from "./lib/errorHandler.js"
 
 /**
@@ -39,6 +40,7 @@ await fastify.register(orgRoutes, { prefix: "/api/org" })
 await fastify.register(sitesManagementRoutes, { prefix: "/api/site" })
 await fastify.register(editorRoutes, { prefix: "/api/site" })
 await fastify.register(publicRoutes, { prefix: "/api/public" })
+await fastify.register(templatesRoutes, { prefix: "/api/templates" })
 
 // Declare a default base health check route
 fastify.get("/", async (request, reply) => {
