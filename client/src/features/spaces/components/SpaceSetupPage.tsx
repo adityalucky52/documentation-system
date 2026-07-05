@@ -46,9 +46,11 @@ export default function SpaceSetupPage() {
   const handleSetupBlank = async () => {
     if (!site || !user) return
     try {
-      const spaceResponse = await setupSite(site.id, "blank", user.id)
-      const newSpaceId = spaceResponse.site.spaces[0].id
-      navigate(`/o/${orgId}/s/${newSpaceId}?type=blank`)
+      const updatedSite = await setupSite(site.id, "blank", user.id)
+      const newSpaceId = updatedSite?.spaces?.[0]?.id
+      if (newSpaceId) {
+        navigate(`/o/${orgId}/s/${newSpaceId}?type=blank`)
+      }
     } catch (err) {
       console.error(err)
       alert("Failed to setup blank site")
