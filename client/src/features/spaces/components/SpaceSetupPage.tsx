@@ -1,50 +1,43 @@
 import { useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { useSitesStore } from "../sitesStore"
-import { useAuthStore } from "../../auth/authStore"
+import { useSpacesStore } from "@features/spaces/spacesStore"
+import { useAuthStore } from "@features/auth/authStore"
 
-import SiteOnboardingOptions from "./SiteOnboardingOptions"
-import ImportFilesModal from "./ImportFilesModal"
-import SiteDashboardHeader from "./SiteDashboardHeader"
-import SiteOverviewCard from "./SiteOverviewCard"
-import SiteSettingsPanel from "./SiteSettingsPanel"
-import SiteGetStartedChecklist from "./SiteGetStartedChecklist"
-import SitePublishPanel from "./SitePublishPanel"
+import SpaceOnboardingOptions from "@features/space-creation/components/SpaceOnboardingOptions"
+import ImportFilesModal from "@features/space-creation/components/ImportFilesModal"
+import SpaceDashboardHeader from "./SpaceDashboardHeader"
+import SpaceOverviewCard from "./SpaceOverviewCard"
+import SpaceSettingsPanel from "./SpaceSettingsPanel"
+import SpaceGetStartedChecklist from "./SpaceGetStartedChecklist"
+import PublishPanel from "@features/publishing/components/PublishPanel"
 
 /**
- * SiteSetupPage Component.
- * 
+ * SpaceSetupPage Component.
+ *
  * Purpose:
  * Renders the dashboard and configuration hub for a specific documentation site.
- * 
+ *
  * Conditional Rendering Strategy:
  * 1. If site metadata is not found: Renders an error notice.
  * 2. If the site is brand new (`isSetup` === false): Displays the Onboarding view
  *    where the user chooses to initialize a blank workspace or import a Markdown file.
  * 3. If the site is already setup: Displays the main management dashboard, splitting into tabs
  *    (Overview checklist vs Settings panel with deletion features).
- * 
- * State & Store Integrations:
- * - `useParams`: Extracts `:siteId` and `:orgId` parameters from the React Router path context.
- * - `useSitesStore`: Supplies the `sites` list, `setupSite` action (onboarding), and `deleteSite` API action.
- * - `useAuthStore`: Retrieves current `user.id` to identify requests in API headers.
+ *
+ * Renamed from SiteSetupPage — moved from sites-management into spaces feature.
+ * Internal imports now pull from space-creation/ and publishing/ features.
  */
-export default function SiteSetupPage() {
+export default function SpaceSetupPage() {
   const { siteId, orgId } = useParams<{ siteId: string; orgId: string }>()
   const navigate = useNavigate()
-  
-  // Sites Store integration for retrieving matching site structure and setup actions
-  const { sites, setupSite, deleteSite, publishSite, error } = useSitesStore()
-  // Auth Store integration for active user headers
+
+  const { sites, setupSite, deleteSite, publishSite, error } = useSpacesStore()
   const { user } = useAuthStore()
-  
-  // Find current site object within the list of fetched sites
+
   const site = sites.find((s) => s.id === siteId)
   const siteName = site?.name || "Site"
-  
-  // Tab menu visibility control state
+
   const [activeTab, setActiveTab] = useState<"overview" | "editor" | "preview" | "settings" | "publish">("overview")
-  // Toggle for Markdown Import Modal dialog
   const [isImportModalOpen, setIsImportModalOpen] = useState(false)
 
   /**
@@ -52,7 +45,11 @@ export default function SiteSetupPage() {
    */
   const handleSetupBlank = async () => {
     if (!site || !user) return
-    await setupSite(site.id, "blank", user.id)
+    const updatedSite = await setupSite(site.id, "blank", user.id)
+    const firstSpaceId = updatedSite?.spaces?.[0]?.id
+    if (firstSpaceId) {
+      navigate(`/o/${orgId}/s/${firstSpaceId}`)
+    }
   }
 
   /**
@@ -60,21 +57,27 @@ export default function SiteSetupPage() {
    */
   const handleSetupTemplate = async () => {
     if (!site || !user) return
-    await setupSite(site.id, "template", user.id)
+    const updatedSite = await setupSite(site.id, "template", user.id)
+    const firstSpaceId = updatedSite?.spaces?.[0]?.id
+    if (firstSpaceId) {
+      navigate(`/o/${orgId}/s/${firstSpaceId}/editable`)
+    }
   }
 
   /**
    * Action: Sets up the site by importing Markdown page data (title & content).
-   * Passed as a callback handler to ImportFilesModal.
    */
   const handleSetupWithFile = async (title: string, content: string) => {
     if (!site || !user) return
-    await setupSite(site.id, "import", user.id, { title, content })
+    const updatedSite = await setupSite(site.id, "import", user.id, { title, content })
+    const firstSpaceId = updatedSite?.spaces?.[0]?.id
+    if (firstSpaceId) {
+      navigate(`/o/${orgId}/s/${firstSpaceId}`)
+    }
   }
 
   /**
    * Action: Permanently deletes the documentation site.
-   * Prompts native window confirm dialog. If verified, routes user back to Organization Home.
    */
   const handleDeleteSite = async () => {
     if (!site || !user) return
@@ -105,7 +108,6 @@ export default function SiteSetupPage() {
     await publishSite(site.id, user.id)
   }
 
-  // Error boundary: Site does not exist in store list
   if (!site) {
     return (
       <div className="flex items-center justify-center h-full text-zinc-500">
@@ -114,7 +116,7 @@ export default function SiteSetupPage() {
     )
   }
 
-  // IF SITE IS NOT SETUP: Show onboarding options to establish spaces and pages
+  // IF SITE IS NOT SETUP: Show onboarding options
   if (!site.isSetup) {
     return (
       <>
@@ -125,7 +127,7 @@ export default function SiteSetupPage() {
             </div>
           </div>
         )}
-        <SiteOnboardingOptions
+        <SpaceOnboardingOptions
           siteName={siteName}
           onSetupBlank={handleSetupBlank}
           onSetupTemplate={handleSetupTemplate}
@@ -141,11 +143,11 @@ export default function SiteSetupPage() {
     )
   }
 
-  // IF SITE IS SETUP: Show Active Site Dashboard (Overview, spaces list, checklists, settings)
+  // IF SITE IS SETUP: Show Active Site Dashboard
   return (
     <div className="flex-1 flex flex-col w-full h-full text-[#f5f5f7] bg-[#0c0c0e] overflow-y-auto">
-      {/* Site Dashboard Header Panel (Tab controllers) */}
-      <SiteDashboardHeader
+      {/* Site Dashboard Header Panel */}
+      <SpaceDashboardHeader
         siteName={siteName}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -154,22 +156,21 @@ export default function SiteSetupPage() {
       />
 
       <div className="max-w-[1200px] w-full mx-auto px-8 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
-        {/* Left Column: Overview Details Card (Displays site meta statistics, spaces size count) */}
-        <SiteOverviewCard siteName={siteName} isPublished={site.isPublished} spaces={site.spaces} />
+
+        {/* Left Column: Overview Details Card */}
+        <SpaceOverviewCard siteName={siteName} isPublished={site.isPublished} spaces={site.spaces} />
 
         {/* Right Column: Dynamic rendering based on active tab */}
         {activeTab === "settings" ? (
-          <SiteSettingsPanel onDeleteSite={handleDeleteSite} />
+          <SpaceSettingsPanel onDeleteSite={handleDeleteSite} />
         ) : activeTab === "publish" ? (
-          <SitePublishPanel site={site} onPublish={handlePublishSite} />
+          <PublishPanel site={site} onPublish={handlePublishSite} />
         ) : (
-          <SiteGetStartedChecklist onStartFirstChangeRequest={handleStartFirstChangeRequest} />
+          <SpaceGetStartedChecklist onStartFirstChangeRequest={handleStartFirstChangeRequest} />
         )}
 
       </div>
 
-      {/* Hidden container fallback dialog if user triggers imports on setting overlays */}
       <ImportFilesModal
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
@@ -178,4 +179,3 @@ export default function SiteSetupPage() {
     </div>
   )
 }
-

@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react"
-import { useParams, useNavigate } from "react-router-dom"
+import { useParams } from "react-router-dom"
 import { FileText, BookOpen, Sun, Moon, Search } from "lucide-react"
-import { parseMarkdownToHtml } from "../../utils/markdownParser"
-import { type Page } from "../sites-management/sitesStore"
+import { parseMarkdownToHtml } from "@shared/utils/markdownParser"
+import type { Page } from "@entities/page/types"
 import { mockSpaceData } from "./mockDocsData"
-import "./public-reader.css"
+import "@shared/styles/public-reader.css"
 
 /**
  * PublicSpaceReaderPage Component.
@@ -15,7 +15,6 @@ import "./public-reader.css"
  */
 export default function PublicSpaceReaderPage() {
   const { spaceId } = useParams<{ spaceId: string }>()
-  const navigate = useNavigate()
 
   // State buffers
   const [spaceName, setSpaceName] = useState<string>("")
@@ -23,7 +22,6 @@ export default function PublicSpaceReaderPage() {
   const [pages, setPages] = useState<Page[]>([])
   const [selectedPage, setSelectedPage] = useState<Page | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(true)
-  const [error, setError] = useState<string | null>(null)
 
   // In-page outline list state
   const [inPageHeadings, setInPageHeadings] = useState<Array<{ id: string; text: string; level: string }>>([])
@@ -71,7 +69,6 @@ export default function PublicSpaceReaderPage() {
 
     const fetchPublishedDocs = async () => {
       setIsLoading(true)
-      setError(null)
       try {
         const response = await fetch(`http://localhost:5001/api/public/spaces/${spaceId}`)
         if (!response.ok) {
@@ -88,8 +85,8 @@ export default function PublicSpaceReaderPage() {
         if (spacePages.length > 0) {
           setSelectedPage(spacePages[0])
         }
-      } catch (err: any) {
-        console.warn("Live API fetch failed or site is unpublished. Loading static mock docs...", err.message)
+      } catch (err: unknown) {
+        console.warn("Live API fetch failed or site is unpublished. Loading static mock docs...", err instanceof Error ? err.message : err)
         // Fallback to static Prisma docs mock data
         setSpaceName(mockSpaceData.name)
         setSiteName(mockSpaceData.site.name)

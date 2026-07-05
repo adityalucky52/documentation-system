@@ -1,7 +1,7 @@
 import { Sparkles, } from "lucide-react"
 import RichTextEditor from "./RichTextEditor/RichTextEditor"
-import { parseMarkdownToHtml } from "../../../utils/markdownParser"
-import { type Page } from "../../sites-management/sitesStore"
+import { parseMarkdownToHtml } from "@shared/utils/markdownParser"
+import type { Page } from "@entities/page/types"
 
 /**
  * EditorCanvas Props.

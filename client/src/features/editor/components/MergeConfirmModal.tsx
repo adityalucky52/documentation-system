@@ -1,8 +1,9 @@
 import { useState } from "react"
 import { GitMerge, CheckCircle } from "lucide-react"
 import { useEditorStore } from "../editorStore"
-import { useSitesStore, type Page } from "../../sites-management/sitesStore"
-import { useAuthStore } from "../../auth/authStore"
+import { useSitesStore } from "@features/spaces/spacesStore"
+import type { Page } from "@entities/page/types"
+import { useAuthStore } from "@features/auth/authStore"
 
 /**
  * MergeConfirmModal Props.

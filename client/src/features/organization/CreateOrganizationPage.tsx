@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Button } from "@shared/components/ui/button"
+import { Input } from "@shared/components/ui/input"
 import { Loader2 } from "lucide-react"
-import { useAuthStore } from "../auth/authStore"
-import BrandingPanel from "../auth/components/BrandingPanel"
+import { useAuthStore } from "@features/auth/authStore"
+import BrandingPanel from "@features/auth/components/BrandingPanel"
 
 /**
  * GitBookLogo SVG Component.
@@ -20,27 +20,23 @@ const GitBookLogo = () => (
 
 /**
  * CreateOrganizationPage Component.
- * 
+ *
  * Purpose:
  * Renders the onboarding interface for creating a new workspace organization.
- * 
+ *
  * Security & Routing Guard:
  * 1. Checks if a user is logged in. If not, pushes to `/login`.
  * 2. Checks if an organization is already linked. If so, skips onboarding and redirects directly to home.
  * 3. Attempts to fetch existing organization mapping from the server via `fetchMyOrganization()`.
  *    If found, syncs state and redirects the user automatically.
- * 
- * Context & API Flow:
- * - Employs `useAuthStore` (Zustand state store) to fetch user context, cache the organization,
- *   and execute the API post request for org creation.
+ *
+ * Moved from features/org/ → features/organization/ (renamed per architecture plan).
  */
 export default function CreateOrganizationPage() {
   const navigate = useNavigate()
   const { user, organization, createOrganization, fetchMyOrganization } = useAuthStore()
-  
-  // Controlled input for the new organization name
+
   const [orgName, setOrgName] = useState("")
-  // Local submission indicator loading state
   const [isLoading, setIsLoading] = useState(false)
 
   // Redirect guard: Redirect immediately if user is already mapped to an organization
@@ -65,7 +61,7 @@ export default function CreateOrganizationPage() {
 
   /**
    * Triggers the creation of the organization on the server.
-   * On success, routes the user directly to the home screen of their new organization `/o/:orgId/home`.
+   * On success, routes the user directly to the home screen of their new organization.
    */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -79,11 +75,11 @@ export default function CreateOrganizationPage() {
 
   return (
     <div className="flex min-h-screen w-full flex-col lg:flex-row bg-[#0c0c0e]">
-      
+
       {/* Workspace Onboarding Form Pane (Left hand side on desktop displays) */}
       <div className="flex flex-1 flex-col justify-center items-center py-12 lg:py-0 px-4 sm:px-6">
         <div className="w-full max-w-[420px] flex flex-col gap-9">
-          
+
           {/* Logo container */}
           <div className="flex items-center gap-2">
             <GitBookLogo />
@@ -113,8 +109,8 @@ export default function CreateOrganizationPage() {
                 />
               </div>
 
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={isLoading || !orgName}
                 className="w-full h-10 mt-1 bg-[#27272a] hover:bg-[#3f3f46] disabled:bg-[#1a1a1c] disabled:text-[#71717a] text-[#e4e4e7] hover:text-white font-medium text-sm rounded-lg transition-all"
               >
@@ -140,4 +136,3 @@ export default function CreateOrganizationPage() {
     </div>
   )
 }
-

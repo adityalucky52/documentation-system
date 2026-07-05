@@ -1,4 +1,4 @@
-import { type Page } from "../sites-management/sitesStore"
+import type { Page } from "@entities/page/types"
 
 export interface MockSpace {
   id: string

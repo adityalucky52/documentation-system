@@ -1,6 +1,6 @@
 import { Link, useParams } from "react-router-dom"
 import { useAuthStore } from "../auth/authStore"
-import { useSitesStore } from "../sites-management/sitesStore"
+import { useSitesStore } from "@features/spaces/spacesStore"
 import { 
   Plus, 
   GitBranch, 

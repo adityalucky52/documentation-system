@@ -1,21 +1,23 @@
 import { Trash2 } from "lucide-react"
 
 /**
- * SiteSettingsPanel Props.
- * @param onDeleteSite - Callback trigger to initiate site deletion. Originates in `SiteSetupPage`.
+ * SpaceSettingsPanel Props.
+ * @param onDeleteSite - Callback trigger to initiate site deletion. Originates in `SpaceSetupPage`.
  */
-interface SiteSettingsPanelProps {
+interface SpaceSettingsPanelProps {
   onDeleteSite: () => void
 }
 
 /**
- * SiteSettingsPanel Component.
- * 
+ * SpaceSettingsPanel Component.
+ *
  * Purpose:
  * Renders settings controls for the active documentation site.
  * Currently supports the Danger Zone options enabling users to delete the site.
+ *
+ * Renamed from SiteSettingsPanel — moved from sites-management into spaces feature.
  */
-export default function SiteSettingsPanel({ onDeleteSite }: SiteSettingsPanelProps) {
+export default function SpaceSettingsPanel({ onDeleteSite }: SpaceSettingsPanelProps) {
   return (
     <div className="lg:col-span-8 flex flex-col gap-6 animate-in fade-in duration-200 font-sans">
       <div className="flex flex-col gap-1.5 shrink-0">
@@ -35,7 +37,7 @@ export default function SiteSettingsPanel({ onDeleteSite }: SiteSettingsPanelPro
             <h4 className="text-xs font-semibold text-white">Delete this site</h4>
             <p className="text-[11px] text-[#8e8e93]">Once deleted, all pages, spaces, and content will be permanently lost.</p>
           </div>
-          <button 
+          <button
             onClick={onDeleteSite}
             className="px-4 py-2 bg-[#e11d48]/10 hover:bg-[#e11d48] border border-[#e11d48]/30 hover:border-transparent text-[#f43f5e] hover:text-white rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer flex items-center gap-1.5 shadow-sm"
           >
@@ -47,4 +49,3 @@ export default function SiteSettingsPanel({ onDeleteSite }: SiteSettingsPanelPro
     </div>
   )
 }
-

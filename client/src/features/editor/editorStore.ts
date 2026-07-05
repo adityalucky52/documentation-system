@@ -1,5 +1,6 @@
 import { create } from "zustand"
-import { useSitesStore, type Page } from "../sites-management/sitesStore"
+import { useSpacesStore } from "@features/spaces/spacesStore"
+import type { Page } from "@entities/page/types"
 
 /**
  * EditorState Interface.
@@ -49,18 +50,19 @@ export const useEditorStore = create<EditorState>((set) => ({
       const data = await response.json()
       if (!response.ok) throw new Error(data.error || "Failed to create page")
 
-      // Sync pages array on active space in the separate useSitesStore
-      const current = useSitesStore.getState().currentSpace
+      // Sync pages array on active space in useSpacesStore
+      const current = useSpacesStore.getState().currentSpace
       if (current && current.id === spaceId) {
-        useSitesStore.setState({
+        useSpacesStore.setState({
           currentSpace: { ...current, pages: [...current.pages, data] },
         })
       }
 
       set({ isLoading: false })
       return data
-    } catch (err: any) {
-      set({ error: err.message || "An unexpected error occurred", isLoading: false })
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "An unexpected error occurred"
+      set({ error: message, isLoading: false })
       return null
     }
   },
@@ -76,7 +78,7 @@ export const useEditorStore = create<EditorState>((set) => ({
   updatePage: async (pageId, title, content, userId) => {
     set({ isLoading: true, error: null })
     try {
-      const spaceId = useSitesStore.getState().currentSpace?.id
+      const spaceId = useSpacesStore.getState().currentSpace?.id
       const branchId = spaceId ? `${spaceId}-draft` : undefined
 
       const response = await fetch(`${API_URL}/pages/${pageId}`, {
@@ -87,10 +89,10 @@ export const useEditorStore = create<EditorState>((set) => ({
       const data = await response.json()
       if (!response.ok) throw new Error(data.error || "Failed to update page")
 
-      // Update pages array inside useSitesStore to refresh editor UI lists
-      const current = useSitesStore.getState().currentSpace
+      // Update pages array inside useSpacesStore to refresh editor UI lists
+      const current = useSpacesStore.getState().currentSpace
       if (current) {
-        useSitesStore.setState({
+        useSpacesStore.setState({
           currentSpace: {
             ...current,
             pages: current.pages.map((p) => (p.id === pageId ? data : p)),
@@ -100,8 +102,9 @@ export const useEditorStore = create<EditorState>((set) => ({
 
       set({ isLoading: false })
       return data
-    } catch (err: any) {
-      set({ error: err.message || "An unexpected error occurred", isLoading: false })
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "An unexpected error occurred"
+      set({ error: message, isLoading: false })
       return null
     }
   },
@@ -119,8 +122,9 @@ export const useEditorStore = create<EditorState>((set) => ({
       const data = await response.json()
       if (!response.ok) throw new Error(data.error || "Failed to fetch merge logs")
       set({ mergeLogs: data, isLoading: false })
-    } catch (err: any) {
-      set({ error: err.message || "An unexpected error occurred", isLoading: false })
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "An unexpected error occurred"
+      set({ error: message, isLoading: false })
     }
   },
 
@@ -137,8 +141,9 @@ export const useEditorStore = create<EditorState>((set) => ({
       const data = await response.json()
       if (!response.ok) throw new Error(data.error || "Failed to fetch organization merge logs")
       set({ mergeLogs: data, isLoading: false })
-    } catch (err: any) {
-      set({ error: err.message || "An unexpected error occurred", isLoading: false })
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "An unexpected error occurred"
+      set({ error: message, isLoading: false })
     }
   },
 }))

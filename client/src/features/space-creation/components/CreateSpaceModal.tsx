@@ -1,44 +1,37 @@
 import React, { useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { X, BookOpen, FileText, LayoutGrid } from "lucide-react"
-import { useSitesStore } from "../sitesStore"
-import { useAuthStore } from "../../auth/authStore"
+import { useSpacesStore } from "@features/spaces/spacesStore"
+import { useAuthStore } from "@features/auth/authStore"
 
 /**
- * CreateSiteModal Props.
+ * CreateSpaceModal Props.
  * @param isOpen - Control toggle mapping visibility. Originates in `DashboardLayout`.
  * @param onClose - Handler to trigger modal close. Originates in `DashboardLayout`.
  */
-interface CreateSiteModalProps {
+interface CreateSpaceModalProps {
   isOpen: boolean
   onClose: () => void
 }
 
 /**
- * CreateSiteModal Component.
- * 
+ * CreateSpaceModal Component.
+ *
  * Purpose:
  * Renders the new site creator dialog pop-up.
- * Includes a left decorative illustration pane showing card layout models,
- * and a right pane housing a text name input form.
- * 
+ * Renamed from CreateSiteModal — moved from sites-management into space-creation.
+ *
  * Flow:
- * - Submit forms trigger `addSite` action from the site store.
- * - On API success, redirects users to setup workspace `/o/:orgId/sites/:siteId` to configure site parameters.
+ * - Submit forms trigger `addSite` action from the spaces store.
+ * - On API success, redirects users to setup workspace `/o/:orgId/sites/:siteId`.
  */
-export default function CreateSiteModal({ isOpen, onClose }: CreateSiteModalProps) {
-  // Input text state
+export default function CreateSpaceModal({ isOpen, onClose }: CreateSpaceModalProps) {
   const [siteName, setSiteName] = useState("")
-  // Sites Store creation action
-  const addSite = useSitesStore((state) => state.addSite)
-  // Auth Store details to provide user headers
+  const addSite = useSpacesStore((state) => state.addSite)
   const { user } = useAuthStore()
   const navigate = useNavigate()
-  
-  // Retrieve organization ID from route params context
   const { orgId } = useParams<{ orgId: string }>()
 
-  // Early return: If modal toggle is closed, render nothing
   if (!isOpen) return null
 
   /**
@@ -52,19 +45,18 @@ export default function CreateSiteModal({ isOpen, onClose }: CreateSiteModalProp
     if (newSiteId) {
       setSiteName("")
       onClose()
-      // Redirect to onboarding site setup workspace
       navigate(`/o/${orgId}/sites/${newSiteId}`)
     }
   }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs transition-opacity duration-300">
-      
+
       {/* Modal Card Layout Container */}
       <div className="relative flex w-[720px] h-[400px] bg-[#161618] border border-[#222225] rounded-xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-        
+
         {/* Close Button X */}
-        <button 
+        <button
           onClick={onClose}
           className="absolute top-4 right-4 text-[#8e8e93] hover:text-white transition-colors z-10 p-1 hover:bg-[#222225] rounded-full"
         >
@@ -73,8 +65,6 @@ export default function CreateSiteModal({ isOpen, onClose }: CreateSiteModalProp
 
         {/* Left Side: Graphic collage (Simulates GitBook space aesthetics) */}
         <div className="hidden md:flex w-[260px] bg-[#0c0c0e] border-r border-[#222225] relative p-6 overflow-hidden items-center justify-center shrink-0">
-          
-          {/* Collage wrapper rotated using CSS transformations */}
           <div className="absolute inset-0 opacity-80 flex flex-col gap-3 rotate-[-15deg] scale-110 translate-x-[-15px] translate-y-[-15px]">
             {/* Collage Row 1 */}
             <div className="flex gap-3">
@@ -103,8 +93,8 @@ export default function CreateSiteModal({ isOpen, onClose }: CreateSiteModalProp
                 <div className="h-1 w-14 bg-[#2c2c30] rounded"></div>
               </div>
             </div>
-            
-            {/* Collage Row 2 (Translating content for layered visual depth) */}
+
+            {/* Collage Row 2 */}
             <div className="flex gap-3 translate-x-[-20px]">
               <div className="w-[150px] h-[90px] bg-[#222225] border border-[#323236] rounded-lg p-3 flex flex-col gap-1.5 shrink-0 shadow-xl">
                 <div className="flex items-center gap-1.5">
@@ -127,7 +117,7 @@ export default function CreateSiteModal({ isOpen, onClose }: CreateSiteModalProp
                 <div className="h-1 w-14 bg-[#2c2c30] rounded"></div>
               </div>
             </div>
-            
+
             {/* Collage Row 3 */}
             <div className="flex gap-3">
               <div className="w-[120px] h-[70px] bg-[#1c1c1e] border border-[#2c2c30] rounded-lg p-2 flex flex-col gap-1 shrink-0 shadow-lg">
@@ -190,4 +180,3 @@ export default function CreateSiteModal({ isOpen, onClose }: CreateSiteModalProp
     </div>
   )
 }
-

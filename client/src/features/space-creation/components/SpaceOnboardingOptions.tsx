@@ -1,12 +1,13 @@
 import { BookOpen, Globe, Upload } from "lucide-react"
 
 /**
- * SiteOnboardingOptionsProps
+ * SpaceOnboardingOptionsProps
  * @param siteName - The name of the documentation site being created.
  * @param onSetupBlank - Callback function to navigate or initiate the setup of a blank site.
+ * @param onSetupTemplate - Callback function to setup from a Prisma Docs template.
  * @param onOpenImportModal - Callback function to trigger the content import workflow.
  */
-interface SiteOnboardingOptionsProps {
+interface SpaceOnboardingOptionsProps {
   siteName: string
   onSetupBlank: () => void
   onSetupTemplate: () => void
@@ -14,25 +15,22 @@ interface SiteOnboardingOptionsProps {
 }
 
 /**
- * SiteOnboardingOptions Component
- * 
+ * SpaceOnboardingOptions Component
+ *
  * Purpose:
  * Renders the onboarding selection view for a new site, allowing users to:
  * 1. Start with a template (Documentation structure).
  * 2. Import existing content (Docs, Markdown, HTML).
  * 3. Start from a blank state.
- * 
- * Features:
- * - Responsive grid layout for onboarding cards.
- * - Interactive visual representations of each setup method.
- * - Conditional trigger handlers for each setup flow.
+ *
+ * Renamed from SiteOnboardingOptions — moved from sites-management into space-creation.
  */
-export default function SiteOnboardingOptions({
+export default function SpaceOnboardingOptions({
   siteName,
   onSetupBlank,
   onSetupTemplate,
   onOpenImportModal
-}: SiteOnboardingOptionsProps) {
+}: SpaceOnboardingOptionsProps) {
   return (
     <div className="max-w-[1012px] w-full mx-auto px-8 py-12 flex flex-col gap-10 font-sans text-[#f5f5f7]">
       {/* Page Header */}
@@ -52,13 +50,12 @@ export default function SiteOnboardingOptions({
 
       {/* Options Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
+
         {/* Docs Template Option */}
-        <div 
+        <div
           onClick={onSetupTemplate}
           className="flex flex-col bg-[#161618] border border-[#222225] hover:border-[#323236] rounded-xl overflow-hidden group cursor-pointer transition-all hover:translate-y-[-2px]"
         >
-          {/* Preview Illustration */}
           <div className="h-[150px] bg-[#0c0c0e] border-b border-[#222225] flex items-center justify-center p-4 relative overflow-hidden shrink-0">
             <div className="w-[180px] h-[100px] bg-[#161618] border border-[#222225] rounded-lg p-2.5 flex flex-col gap-1.5 shadow-lg group-hover:scale-[1.02] transition-transform">
               <div className="flex items-center gap-1.5">
@@ -73,7 +70,6 @@ export default function SiteOnboardingOptions({
             </div>
             <div className="absolute -bottom-10 -right-10 w-24 h-24 bg-indigo-600/10 rounded-full blur-xl"></div>
           </div>
-          {/* Card Body */}
           <div className="p-5 flex flex-col gap-1.5">
             <h3 className="text-sm font-semibold text-white group-hover:text-white transition-colors">
               Docs template
@@ -85,11 +81,10 @@ export default function SiteOnboardingOptions({
         </div>
 
         {/* Import Option */}
-        <div 
+        <div
           onClick={onOpenImportModal}
           className="flex flex-col bg-[#161618] border border-[#222225] hover:border-[#323236] rounded-xl overflow-hidden group cursor-pointer transition-all hover:translate-y-[-2px]"
         >
-          {/* Preview Illustration */}
           <div className="h-[150px] bg-[#0c0c0e] border-b border-[#222225] flex items-center justify-center p-4 relative overflow-hidden shrink-0">
             <div className="flex items-center gap-6 group-hover:scale-[1.02] transition-transform">
               <div className="w-12 h-12 rounded-xl bg-[#222225] border border-[#2c2c30] flex items-center justify-center text-[#8e8e93]">
@@ -103,7 +98,6 @@ export default function SiteOnboardingOptions({
               </div>
             </div>
           </div>
-          {/* Card Body */}
           <div className="p-5 flex flex-col gap-1.5">
             <h3 className="text-sm font-semibold text-white group-hover:text-white transition-colors">
               Import
@@ -115,11 +109,10 @@ export default function SiteOnboardingOptions({
         </div>
 
         {/* Blank Option */}
-        <div 
+        <div
           onClick={onSetupBlank}
           className="flex flex-col bg-[#161618] border border-[#222225] hover:border-[#323236] rounded-xl overflow-hidden group cursor-pointer transition-all hover:translate-y-[-2px]"
         >
-          {/* Preview Illustration */}
           <div className="h-[150px] bg-[#0c0c0e] border-b border-[#222225] flex items-center justify-center p-4 relative overflow-hidden shrink-0">
             <div className="w-[180px] h-[100px] bg-[#161618] border border-[#222225] rounded-lg p-3 flex flex-col gap-2 shadow-lg group-hover:scale-[1.02] transition-transform">
               <div className="flex items-center gap-1.5 border-b border-[#222225] pb-2">
@@ -131,7 +124,6 @@ export default function SiteOnboardingOptions({
               </div>
             </div>
           </div>
-          {/* Card Body */}
           <div className="p-5 flex flex-col gap-1.5">
             <h3 className="text-sm font-semibold text-white group-hover:text-white transition-colors">
               Blank

@@ -1,21 +1,23 @@
 import { useState } from "react"
 import { Globe, Copy, ExternalLink, Send, Check, AlertCircle } from "lucide-react"
-import { type Site } from "../sitesStore"
+import type { Site } from "@entities/site/types"
 
-interface SitePublishPanelProps {
+interface PublishPanelProps {
   site: Site
   onPublish: () => Promise<void>
 }
 
 /**
- * SitePublishPanel Component.
- * 
+ * PublishPanel Component.
+ *
  * Purpose:
- * Renders the publishing interface inside the Site Setup view.
+ * Renders the publishing interface inside the Space Setup view.
  * If the site is unpublished, prompts the user to make it live.
  * If published, displays a success card and copyable viewer links for each space.
+ *
+ * Renamed from SitePublishPanel — moved from sites-management into publishing feature.
  */
-export default function SitePublishPanel({ site, onPublish }: SitePublishPanelProps) {
+export default function PublishPanel({ site, onPublish }: PublishPanelProps) {
   const [isPublishing, setIsPublishing] = useState(false)
   const [copiedSpaceId, setCopiedSpaceId] = useState<string | null>(null)
 
@@ -116,7 +118,7 @@ export default function SitePublishPanel({ site, onPublish }: SitePublishPanelPr
                 site.spaces.map((space) => {
                   const spaceUrl = `${window.location.origin}/share/s/${space.id}`
                   return (
-                    <div 
+                    <div
                       key={space.id}
                       className="bg-[#0c0c0e]/80 border border-[#222225] rounded-lg p-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between"
                     >

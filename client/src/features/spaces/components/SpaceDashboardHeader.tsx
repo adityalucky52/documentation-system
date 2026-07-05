@@ -2,14 +2,14 @@ import { useNavigate } from "react-router-dom"
 import { Send } from "lucide-react"
 
 /**
- * SiteDashboardHeader Props.
- * @param siteName - Name of the documentation site, passed from parent `SiteSetupPage`.
+ * SpaceDashboardHeader Props.
+ * @param siteName - Name of the documentation site.
  * @param activeTab - Current tab string context.
- * @param setActiveTab - State modifier callback from parent `SiteSetupPage` to toggle tab renders.
+ * @param setActiveTab - State modifier callback to toggle tab renders.
  * @param orgId - Organization unique identifier to resolve route paths.
  * @param siteSpaces - Spaces mapping list to find default editing spaces.
  */
-interface SiteDashboardHeaderProps {
+interface SpaceDashboardHeaderProps {
   siteName: string
   activeTab: "overview" | "editor" | "preview" | "settings" | "publish"
   setActiveTab: (tab: "overview" | "editor" | "preview" | "settings" | "publish") => void
@@ -18,19 +18,21 @@ interface SiteDashboardHeaderProps {
 }
 
 /**
- * SiteDashboardHeader Component.
- * 
+ * SpaceDashboardHeader Component.
+ *
  * Purpose:
- * Renders the top menu bar in the Site Setup view.
+ * Renders the top menu bar in the Space Setup view.
  * Houses breadcrumbs (Docs sites / siteName) and tab toggles (Overview, Editor, Preview, Settings, Publish).
+ *
+ * Renamed from SiteDashboardHeader — moved from sites-management into spaces feature.
  */
-export default function SiteDashboardHeader({
+export default function SpaceDashboardHeader({
   siteName,
   activeTab,
   setActiveTab,
   orgId,
   siteSpaces
-}: SiteDashboardHeaderProps) {
+}: SpaceDashboardHeaderProps) {
   const navigate = useNavigate()
 
   return (
@@ -44,14 +46,13 @@ export default function SiteDashboardHeader({
 
       {/* Tab Selection */}
       <div className="flex items-center gap-1">
-        <button 
+        <button
           onClick={() => setActiveTab("overview")}
           className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${activeTab === "overview" ? "bg-[#1c1c1e] text-white" : "text-[#8e8e93] hover:text-white hover:bg-[#161618]"}`}
         >
           Overview
         </button>
-        {/* Editor: Navigates to the editor screen of the first space if spaces exist, else sets tab to editor */}
-        <button 
+        <button
           onClick={() => {
             if (siteSpaces && siteSpaces.length > 0) {
               navigate(`/o/${orgId}/s/${siteSpaces[0].id}`)
@@ -63,19 +64,19 @@ export default function SiteDashboardHeader({
         >
           Editor
         </button>
-        <button 
+        <button
           onClick={() => setActiveTab("preview")}
           className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${activeTab === "preview" ? "bg-[#1c1c1e] text-white" : "text-[#8e8e93] hover:text-white hover:bg-[#161618]"}`}
         >
           Preview
         </button>
-        <button 
+        <button
           onClick={() => setActiveTab("settings")}
           className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${activeTab === "settings" ? "bg-[#1c1c1e] text-white" : "text-[#8e8e93] hover:text-white hover:bg-[#161618]"}`}
         >
           Settings
         </button>
-        <button 
+        <button
           onClick={() => setActiveTab("publish")}
           className="px-3 py-1.5 text-xs font-semibold rounded-md bg-[#0070f3] text-white hover:bg-[#0060d3] transition-colors flex items-center gap-1 cursor-pointer"
         >
@@ -86,4 +87,3 @@ export default function SiteDashboardHeader({
     </div>
   )
 }
-

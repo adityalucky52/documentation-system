@@ -2,13 +2,14 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import LandingPage from "./features/landing/LandingPage"
 import LoginPage from "./features/auth/LoginPage"
 import RegisterPage from "./features/auth/RegisterPage"
-import CreateOrganizationPage from "./features/org/CreateOrganizationPage"
+import CreateOrganizationPage from "./features/organization/CreateOrganizationPage"
 import DashboardLayout from "./features/dashboard/components/DashboardLayout"
 import DashboardPage from "./features/dashboard/DashboardPage"
-import SiteSetupPage from "./features/sites-management/components/SiteSetupPage"
+import SpaceSetupPage from "./features/spaces/components/SpaceSetupPage"
 import SpaceEditorPage from "./features/editor/components/SpaceEditorPage"
 import GlobalChangeRequestsPage from "./features/change-requests/components/GlobalChangeRequestsPage"
 import PublicSpaceReaderPage from "./features/public/PublicSpaceReaderPage"
+import ReaderPage from "./features/reader/ReaderPage"
 
 /**
  * Main application router configuration using React Router DOM.
@@ -46,10 +47,11 @@ function App() {
           {/* Default redirect from organization root to organization home */}
           <Route index element={<Navigate to="home" replace />} />
           <Route path="home" element={<DashboardPage />} />
-          <Route path="sites/:siteId" element={<SiteSetupPage />} />
+          <Route path="sites/:siteId" element={<SpaceSetupPage />} />
           
           {/* Editor view modes */}
           <Route path="s/:spaceId" element={<SpaceEditorPage />} />
+          <Route path="s/:spaceId/editable" element={<ReaderPage />} />
           <Route path="s/:spaceId/~/change-requests" element={<SpaceEditorPage />} />
           <Route path="s/:spaceId/~/changes/:changeRequestId" element={<SpaceEditorPage />} />
           

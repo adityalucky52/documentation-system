@@ -1,45 +1,49 @@
 import { useState, useEffect, useRef } from "react"
-import { useParams, useNavigate } from "react-router-dom"
-import { FileText, BookOpen, Sun, Moon, Search, Plus, Edit, Eye, Check, Loader2 } from "lucide-react"
-import { parseMarkdownToHtml, parseHtmlToMarkdown, stripHeader, prependHeader } from "../../utils/markdownParser"
-import { useAuthStore } from "../auth/authStore"
-import { useSitesStore, type Page } from "../sites-management/sitesStore"
-import { useEditorStore } from "../editor/editorStore"
-import RichTextEditor from "../editor/components/RichTextEditor/RichTextEditor"
-import "../public/public-reader.css"
+import { useParams } from "react-router-dom"
+import { FileText, BookOpen, Sun, Moon, Plus, Edit, Eye, Check, Loader2 } from "lucide-react"
+import { parseMarkdownToHtml, parseHtmlToMarkdown, stripHeader, prependHeader } from "@shared/utils/markdownParser"
+import { useAuthStore } from "@features/auth/authStore"
+import { useSpacesStore } from "@features/spaces/spacesStore"
+import type { Page } from "@entities/page/types"
+import { useEditorStore } from "@features/editor/editorStore"
+import RichTextEditor from "@features/editor/components/RichTextEditor/RichTextEditor"
+import "@shared/styles/public-reader.css"
 
 /**
- * EditableSpaceReaderPage Component.
- * 
+ * ReaderPage Component (formerly EditableSpaceReaderPage).
+ *
  * Purpose:
  * Renders the premium 3-column public reader layout, but with full inline-editing capabilities.
  * Allows authors to edit pages directly in the public layout context.
+ *
+ * Moved from features/editable-reader/EditableSpaceReaderPage.tsx → features/reader/ReaderPage.tsx
+ * Updated imports:
+ * - markdownParser from @shared/utils/markdownParser
+ * - useSpacesStore (was useSitesStore) from @features/spaces/spacesStore
+ * - Page type from @entities/page/types
+ * - useEditorStore from @features/editor/editorStore
+ * - RichTextEditor from @features/editor/components/RichTextEditor/
+ * - CSS from @shared/styles/public-reader.css
  */
-export default function EditableSpaceReaderPage() {
-  const { spaceId, orgId } = useParams<{ spaceId: string; orgId: string }>()
-  const navigate = useNavigate()
+export default function ReaderPage() {
+  const { spaceId } = useParams<{ spaceId: string; orgId: string }>()
   const { user } = useAuthStore()
 
-  // Sites Store integration for space details
-  const { currentSpace, fetchSpace, isLoading: isSpaceLoading } = useSitesStore()
-  // Editor Store integration for page updating callbacks
-  const { updatePage, createPage, isLoading: isSaving, error: saveError } = useEditorStore()
+  const { currentSpace, fetchSpace, isLoading: isSpaceLoading } = useSpacesStore()
+  const { updatePage, createPage, isLoading: isSaving } = useEditorStore()
 
-  // Local UI States
   const [selectedPage, setSelectedPage] = useState<Page | null>(null)
   const [isEditing, setIsEditing] = useState<boolean>(false)
   const [inPageHeadings, setInPageHeadings] = useState<Array<{ id: string; text: string; level: string }>>([])
   const [activeHeadingId, setActiveHeadingId] = useState<string>("")
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"))
 
-  // Draft buffers for inputs
   const [editTitle, setEditTitle] = useState("")
   const [editContent, setEditContent] = useState<string | null>(null)
 
   // Sync space on mount / changes
   useEffect(() => {
     if (spaceId && user) {
-      // Load the draft version of the pages for editing
       fetchSpace(spaceId, user.id, `${spaceId}-draft`)
     }
   }, [spaceId, user, fetchSpace])
@@ -192,7 +196,7 @@ export default function EditableSpaceReaderPage() {
       setSelectedPage(newPage)
       setEditTitle(newPage.title)
       setEditContent(newPage.content)
-      setIsEditing(true) // Open immediately in edit mode
+      setIsEditing(true)
     }
   }
 
@@ -277,7 +281,6 @@ export default function EditableSpaceReaderPage() {
           <div className="flex flex-col gap-4">
             <div className="toc-heading flex items-center justify-between">
               <span>Table of Contents</span>
-              {/* Add page trigger inside sidebar */}
               {isEditing && (
                 <button
                   onClick={handleAddNewPage}
@@ -316,7 +319,6 @@ export default function EditableSpaceReaderPage() {
             {selectedPage ? (
               <div className="flex flex-col animate-in fade-in duration-200">
                 {isEditing ? (
-                  // Edit Mode: Same layout structure but with input fields active
                   <div className={`p-8 md:p-12 border rounded-xl overflow-hidden shadow-sm transition-all duration-200 ${
                     isDark ? "bg-[#161618] border-[#222225]" : "bg-white border-[#e1e4e8]"
                   }`}>
@@ -339,7 +341,6 @@ export default function EditableSpaceReaderPage() {
                     )}
                   </div>
                 ) : (
-                  // Preview Mode: High-fidelity GitBook browser mockup frame
                   <div className={`w-full border rounded-xl overflow-hidden shadow-xs transition-all duration-200 ${
                     isDark ? "bg-[#161618] border-[#222225]" : "bg-white border-[#e1e4e8]"
                   }`}>
@@ -351,21 +352,20 @@ export default function EditableSpaceReaderPage() {
                         <div className="w-5 h-5 rounded bg-indigo-500 flex items-center justify-center text-white text-[10px]">H</div>
                         <span className={isDark ? "text-white" : "text-zinc-800"}>{siteName}</span>
                       </div>
-                      
-                      {/* Search box placeholder */}
+
                       <div className={`hidden sm:flex items-center gap-2 border px-2.5 py-1.5 rounded-md text-[10px] w-48 ${
                         isDark ? "bg-[#161618] border-[#222225] text-zinc-500" : "bg-white border-[#e1e4e8] text-zinc-400"
                       }`}>
                         <span>Search...</span>
                       </div>
-                      
+
                       <div className={`px-2.5 py-1 rounded-md text-[10px] font-semibold cursor-pointer ${
                         isDark ? "bg-[#222225] text-white hover:bg-[#2c2c30]" : "bg-white border border-[#e1e4e8] text-zinc-700 hover:bg-[#f6f8fa]"
                       }`}>
                         Ask
                       </div>
                     </div>
-                    
+
                     {/* Simulated sub navbar */}
                     <div className={`px-6 py-2.5 border-b flex items-center gap-6 text-[11px] font-semibold select-none ${
                       isDark ? "bg-[#161618] border-[#222225] text-zinc-500" : "bg-white border-[#e1e4e8] text-zinc-600"
@@ -375,33 +375,25 @@ export default function EditableSpaceReaderPage() {
                       <span className="hover:text-emerald-500 cursor-pointer">API Reference</span>
                       <span className="hover:text-emerald-500 cursor-pointer">Changelog</span>
                     </div>
-                    
+
                     {/* Page mockup sheet */}
-                    <div className={`p-8 md:p-12 transition-all ${
-                      isDark ? "bg-[#161618]" : "bg-white"
-                    }`}>
-                      {/* Standard page title heading */}
-                      <h1 className={`text-4xl font-bold tracking-tight mb-6 ${
-                        isDark ? "text-white" : "text-zinc-900"
-                      }`}>
+                    <div className={`p-8 md:p-12 transition-all ${isDark ? "bg-[#161618]" : "bg-white"}`}>
+                      <h1 className={`text-4xl font-bold tracking-tight mb-6 ${isDark ? "text-white" : "text-zinc-900"}`}>
                         {editTitle || selectedPage.title}
                       </h1>
-                      
-                      {/* If home page, render GitBook home layouts */}
+
                       {selectedPage.title.toLowerCase().includes("intro") || selectedPage.title.toLowerCase().includes("home") ? (
                         <div className="flex flex-col gap-6 animate-in fade-in duration-200">
                           <p className={isDark ? "text-zinc-300 text-sm leading-relaxed" : "text-zinc-600 text-sm leading-relaxed"}>
                             Welcome to your team's developer platform
                           </p>
-                          
-                          {/* Mock Ask box */}
+
                           <div className={`flex items-center gap-3 border rounded-xl px-4 py-3 text-xs w-full mb-4 ${
                             isDark ? "bg-[#0c0c0e] border-[#222225] text-zinc-500" : "bg-[#f6f8fa] border-[#e1e4e8] text-zinc-500"
                           }`}>
                             <span>Ask a question...</span>
                           </div>
-                          
-                          {/* Quick links grid */}
+
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6">
                             {["Get started", "Authenticate", "Integrate", "Contribute"].map((text) => (
                               <div key={text} className={`p-3 border rounded-lg text-xs font-semibold text-center select-none cursor-pointer hover:scale-[1.01] transition-transform ${
@@ -411,8 +403,7 @@ export default function EditableSpaceReaderPage() {
                               </div>
                             ))}
                           </div>
-                          
-                          {/* Page content in read-only TipTap */}
+
                           {editContent !== null && (
                             <RichTextEditor
                               content={editContent}
@@ -422,7 +413,6 @@ export default function EditableSpaceReaderPage() {
                           )}
                         </div>
                       ) : (
-                        // Standard template pages render TipTap read-only Directly
                         editContent !== null && (
                           <RichTextEditor
                             content={editContent}

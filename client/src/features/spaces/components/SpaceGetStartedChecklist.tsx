@@ -1,23 +1,25 @@
 import { PenTool, GitBranch, UserPlus, Palette, Compass, Globe, Plus } from "lucide-react"
 
 /**
- * SiteGetStartedChecklist Props.
- * @param onStartFirstChangeRequest - Callback trigger to route to the text editor space, originating in `SiteSetupPage`.
+ * SpaceGetStartedChecklist Props.
+ * @param onStartFirstChangeRequest - Callback trigger to route to the text editor space.
  */
-interface SiteGetStartedChecklistProps {
+interface SpaceGetStartedChecklistProps {
   onStartFirstChangeRequest: () => void
 }
 
 /**
- * SiteGetStartedChecklist Component.
- * 
+ * SpaceGetStartedChecklist Component.
+ *
  * Purpose:
  * Renders an onboarding task checklist for newly initialized documentation sites.
  * Helps direct users on subsequent configuration tasks (content editing, team invites, style settings, custom domains).
+ *
+ * Renamed from SiteGetStartedChecklist — moved from sites-management into spaces feature.
  */
-export default function SiteGetStartedChecklist({
+export default function SpaceGetStartedChecklist({
   onStartFirstChangeRequest
-}: SiteGetStartedChecklistProps) {
+}: SpaceGetStartedChecklistProps) {
   return (
     <div className="lg:col-span-8 flex flex-col gap-4 font-sans">
       <div className="flex items-center justify-between mb-1">
@@ -28,7 +30,7 @@ export default function SiteGetStartedChecklist({
       </div>
 
       <div className="flex flex-col gap-3">
-        
+
         {/* Task 1: Edit your content (Expanded active task card layout) */}
         <div className="bg-[#161618] border border-[#222225] rounded-xl p-6 flex flex-col gap-4">
           <div className="flex items-start justify-between">
@@ -45,9 +47,8 @@ export default function SiteGetStartedChecklist({
             </div>
           </div>
 
-          {/* Action buttons triggers */}
           <div className="flex items-center gap-3 pl-[50px] mt-1">
-            <button 
+            <button
               onClick={onStartFirstChangeRequest}
               className="px-3.5 py-1.5 text-xs font-semibold text-black bg-white hover:bg-white/95 rounded-md flex items-center gap-1.5 transition-all cursor-pointer"
             >
@@ -116,4 +117,3 @@ export default function SiteGetStartedChecklist({
     </div>
   )
 }
-

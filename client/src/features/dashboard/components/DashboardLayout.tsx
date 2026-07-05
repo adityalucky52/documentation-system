@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react"
 import { useParams, useNavigate, Link, Outlet } from "react-router-dom"
 import { useAuthStore } from "../../auth/authStore"
-import { useSitesStore } from "../../sites-management/sitesStore"
-import CreateSiteModal from "../../sites-management/components/CreateSiteModal"
+import { useSitesStore } from "@features/spaces/spacesStore"
+import CreateSiteModal from "@features/space-creation/components/CreateSpaceModal"
 import { 
   ChevronDown, 
   Search, 

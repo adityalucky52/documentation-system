@@ -1,8 +1,8 @@
 import Fastify from "fastify"
 import cors from "@fastify/cors"
 import { authRoutes } from "./features/auth/auth.routes.js"
-import { orgRoutes } from "./features/org/org.routes.js"
-import { sitesManagementRoutes } from "./features/sites-management/sites-management.routes.js"
+import { organizationRoutes } from "./features/organization/organization.routes.js"
+import { spacesRoutes } from "./features/spaces/spaces.routes.js"
 import { editorRoutes } from "./features/editor/editor.routes.js"
 import { publicRoutes } from "./features/public/public.routes.js"
 import { templatesRoutes } from "./features/templates/templates.routes.js"
@@ -36,8 +36,8 @@ await fastify.register(cors, {
 // Register Routes Plugins
 // Binds endpoint controllers to their respective URL base prefixes.
 await fastify.register(authRoutes, { prefix: "/api/auth" })
-await fastify.register(orgRoutes, { prefix: "/api/org" })
-await fastify.register(sitesManagementRoutes, { prefix: "/api/site" })
+await fastify.register(organizationRoutes, { prefix: "/api/org" })
+await fastify.register(spacesRoutes, { prefix: "/api/site" })
 await fastify.register(editorRoutes, { prefix: "/api/site" })
 await fastify.register(publicRoutes, { prefix: "/api/public" })
 await fastify.register(templatesRoutes, { prefix: "/api/templates" })

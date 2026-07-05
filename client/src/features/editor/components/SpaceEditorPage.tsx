@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { useAuthStore } from "../../auth/authStore"
-import { useSitesStore, type Page } from "../../sites-management/sitesStore"
+import { useAuthStore } from "@features/auth/authStore"
+import { useSitesStore } from "@features/spaces/spacesStore"
+import type { Page } from "@entities/page/types"
 import { useEditorStore } from "../editorStore"
 
 // Subcomponents

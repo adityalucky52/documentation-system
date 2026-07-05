@@ -1,59 +1,25 @@
 import { create } from "zustand"
+import type { Page } from "@entities/page/types"
+import type { Space, CurrentSpace } from "@entities/space/types"
+import type { Site } from "@entities/site/types"
+
+// Re-export entity types for backward compatibility with existing imports
+export type { Page, Space, Site }
 
 /**
- * Page Interface.
- * Represents a documentation page document.
+ * Zustand State Interface for spaces management.
  */
-export interface Page {
-  id: string
-  title: string
-  content: string
-  spaceId: string
-  createdAt: string
-  updatedAt: string
-}
-
-/**
- * Space Interface.
- * Represents a branch/workspace space within a specific documentation site (Git-like).
- * Holds pages.
- */
-export interface Space {
-  id: string
-  name: string
-  siteId: string
-  pages?: Page[]
-  createdAt: string
-  updatedAt: string
-}
-
-/**
- * Site Interface.
- * Represents a documentation site. Contains spaces.
- */
-export interface Site {
-  id: string
-  name: string
-  isSetup: boolean
-  isPublished: boolean
-  spaces?: Space[]
-  updatedAt: string
-}
-
-/**
- * Zustand State Interface for sites management.
- */
-interface SitesState {
-  sites: Site[] // List of all organization documentation sites
-  currentSpace: (Space & { pages: Page[]; site?: Site }) | null // The currently active editor workspace space
+interface SpacesState {
+  sites: Site[]
+  currentSpace: CurrentSpace | null
   isLoading: boolean
   error: string | null
-  isCreateModalOpen: boolean // UI visibility flag for CreateSiteModal
+  isCreateModalOpen: boolean
 
   setCreateModalOpen: (isOpen: boolean) => void
   fetchSites: (userId: string) => Promise<void>
   addSite: (name: string, userId: string) => Promise<string | null>
-  setupSite: (siteId: string, type: string, userId: string, importData?: { title: string; content: string }) => Promise<boolean>
+  setupSite: (siteId: string, type: string, userId: string, importData?: { title: string; content: string }) => Promise<Site | null>
   fetchSpace: (spaceId: string, userId: string, branchId?: string) => Promise<void>
   deleteSite: (siteId: string, userId: string) => Promise<boolean>
   publishSite: (siteId: string, userId: string) => Promise<boolean>
@@ -63,9 +29,10 @@ interface SitesState {
 const API_URL = "http://localhost:5001/api/site"
 
 /**
- * useSitesStore: Zustand store to handle CRUD operations on sites, spaces, and active workspace configurations.
+ * useSpacesStore: Zustand store to handle CRUD operations on sites, spaces, and active workspace configurations.
+ * Renamed from useSitesStore (was in sites-management/sitesStore.ts).
  */
-export const useSitesStore = create<SitesState>((set) => ({
+export const useSpacesStore = create<SpacesState>((set) => ({
   sites: [],
   currentSpace: null,
   isLoading: false,
@@ -91,8 +58,7 @@ export const useSitesStore = create<SitesState>((set) => ({
       const data = await response.json()
       if (!response.ok) throw new Error(data.error || "Failed to fetch sites")
 
-      // Map raw dates into reader-friendly formatted strings
-      const mappedSites = data.sites.map((site: any) => ({
+      const mappedSites = data.sites.map((site: Site & { updatedAt: string }) => ({
         id: site.id,
         name: site.name,
         isSetup: site.isSetup,
@@ -107,8 +73,9 @@ export const useSitesStore = create<SitesState>((set) => ({
       }))
 
       set({ sites: mappedSites, isLoading: false })
-    } catch (err: any) {
-      set({ error: err.message || "An unexpected error occurred", isLoading: false })
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "An unexpected error occurred"
+      set({ error: message, isLoading: false })
     }
   },
 
@@ -128,19 +95,19 @@ export const useSitesStore = create<SitesState>((set) => ({
       if (!response.ok) throw new Error(data.error || "Failed to create site")
 
       const newSite: Site = {
-          id: data.site.id,
-          name: data.site.name,
-          isSetup: data.site.isSetup,
-          isPublished: data.site.isPublished || false,
-          spaces: data.site.spaces || [],
-          updatedAt: "now",
-        }
+        id: data.site.id,
+        name: data.site.name,
+        isSetup: data.site.isSetup,
+        isPublished: data.site.isPublished || false,
+        spaces: data.site.spaces || [],
+        updatedAt: "now",
+      }
 
-      // Prepend the new site to the active lists array
       set((state) => ({ sites: [newSite, ...state.sites], isLoading: false }))
       return data.site.id
-    } catch (err: any) {
-      set({ error: err.message || "An unexpected error occurred", isLoading: false })
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "An unexpected error occurred"
+      set({ error: message, isLoading: false })
       return null
     }
   },
@@ -174,22 +141,20 @@ export const useSitesStore = create<SitesState>((set) => ({
         }),
       }
 
-      // Update the modified site in the stores list
       set((state) => ({
         sites: state.sites.map((s) => (s.id === siteId ? updatedSite : s)),
         isLoading: false,
       }))
-      return true
-    } catch (err: any) {
-      set({ error: err.message || "An unexpected error occurred", isLoading: false })
-      return false
+      return updatedSite
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "An unexpected error occurred"
+      set({ error: message, isLoading: false })
+      return null
     }
   },
 
   /**
    * Action: Loads full details of a specific workspace space, including nested pages.
-   * 
-   * Dynamic Import & Circular Dependency Mitigation:
    */
   fetchSpace: async (spaceId, userId, branchId) => {
     set({ isLoading: true, error: null })
@@ -206,8 +171,9 @@ export const useSitesStore = create<SitesState>((set) => ({
       if (!response.ok) throw new Error(data.error || "Failed to fetch space details")
 
       set({ currentSpace: data, isLoading: false })
-    } catch (err: any) {
-      set({ error: err.message || "An unexpected error occurred", isLoading: false })
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "An unexpected error occurred"
+      set({ error: message, isLoading: false })
     }
   },
 
@@ -224,11 +190,11 @@ export const useSitesStore = create<SitesState>((set) => ({
       const data = await response.json()
       if (!response.ok) throw new Error(data.error || "Failed to delete site")
 
-      // Remove deleted item from the store's sites array
       set((state) => ({ sites: state.sites.filter((s) => s.id !== siteId), isLoading: false }))
       return true
-    } catch (err: any) {
-      set({ error: err.message || "An unexpected error occurred", isLoading: false })
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "An unexpected error occurred"
+      set({ error: message, isLoading: false })
       return false
     }
   },
@@ -246,7 +212,6 @@ export const useSitesStore = create<SitesState>((set) => ({
       const data = await response.json()
       if (!response.ok) throw new Error(data.error || "Failed to publish site")
 
-      // Update isPublished to true for this site in local state
       set((state) => ({
         sites: state.sites.map((s) =>
           s.id === siteId ? { ...s, isPublished: true } : s
@@ -254,10 +219,17 @@ export const useSitesStore = create<SitesState>((set) => ({
         isLoading: false,
       }))
       return true
-    } catch (err: any) {
-      set({ error: err.message || "An unexpected error occurred", isLoading: false })
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "An unexpected error occurred"
+      set({ error: message, isLoading: false })
       return false
     }
   },
 }))
 
+/**
+ * Backward-compatibility alias.
+ * Components that still import useSitesStore will continue to work.
+ * @deprecated Use useSpacesStore instead.
+ */
+export const useSitesStore = useSpacesStore

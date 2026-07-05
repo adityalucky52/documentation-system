@@ -1,16 +1,16 @@
-import { SitesManagementRepository } from "./sites-management.repository.js"
+import { SpacesRepository } from "./spaces.repository.js"
 import { TemplatesService } from "../templates/templates.service.js"
 
 /**
- * SitesManagementService.
+ * SpacesService.
  * 
  * Purpose:
  * Coordinates the business rules for managing sites. Encapsulates logic for
  * authorization (ensuring users own an organization before creating sites) and
  * content generation (seeding new spaces and pages with templates or imports).
  */
-export class SitesManagementService {
-  private repository = new SitesManagementRepository()
+export class SpacesService {
+  private repository = new SpacesRepository()
 
   /**
    * createSite Business logic.
