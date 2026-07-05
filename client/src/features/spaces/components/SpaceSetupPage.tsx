@@ -45,10 +45,13 @@ export default function SpaceSetupPage() {
    */
   const handleSetupBlank = async () => {
     if (!site || !user) return
-    const updatedSite = await setupSite(site.id, "blank", user.id)
-    const firstSpaceId = updatedSite?.spaces?.[0]?.id
-    if (firstSpaceId) {
-      navigate(`/o/${orgId}/s/${firstSpaceId}`)
+    try {
+      const spaceResponse = await setupSite(site.id, "blank", user.id)
+      const newSpaceId = spaceResponse.site.spaces[0].id
+      navigate(`/o/${orgId}/s/${newSpaceId}?type=blank`)
+    } catch (err) {
+      console.error(err)
+      alert("Failed to setup blank site")
     }
   }
 
@@ -60,7 +63,7 @@ export default function SpaceSetupPage() {
     const updatedSite = await setupSite(site.id, "template", user.id)
     const firstSpaceId = updatedSite?.spaces?.[0]?.id
     if (firstSpaceId) {
-      navigate(`/o/${orgId}/s/${firstSpaceId}/editable`)
+      navigate(`/o/${orgId}/s/${firstSpaceId}?type=template`)
     }
   }
 

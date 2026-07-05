@@ -75,12 +75,13 @@ export class SpacesRepository {
    * Creates a new Space record in the database.
    * Relates the space to a Site.
    */
-  async createSpace(id: string, name: string, siteId: string) {
+  async createSpace(id: string, name: string, siteId: string, isTemplate: boolean = false) {
     return prisma.space.create({
       data: {
         id,
         name,
-        siteId
+        siteId,
+        isTemplate
       }
     })
   }

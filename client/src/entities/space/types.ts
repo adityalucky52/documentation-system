@@ -10,6 +10,7 @@ export interface Space {
   id: string
   name: string
   siteId: string
+  isTemplate: boolean
   pages?: Page[]
   createdAt: string
   updatedAt: string
@@ -20,6 +21,7 @@ export interface Space {
  * Includes full pages array and optional parent site reference.
  */
 export interface CurrentSpace extends Space {
+  isTemplate: boolean
   pages: Page[]
   site?: Site
 }

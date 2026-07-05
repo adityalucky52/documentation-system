@@ -87,6 +87,7 @@ model Space {
   name           String
   siteId         String
   site           Site            @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  isTemplate     Boolean         @default(false)
   pages          Page[]
   branches       Branch[]
   mergeLogs      MergeLog[]

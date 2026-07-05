@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react"
-import { useParams, useNavigate } from "react-router-dom"
+import { useParams, useNavigate, useSearchParams } from "react-router-dom"
 import { useAuthStore } from "@features/auth/authStore"
 import { useSitesStore } from "@features/spaces/spacesStore"
 import type { Page } from "@entities/page/types"
@@ -43,6 +43,10 @@ export default function SpaceEditorPage() {
 
   // Sites Store integration for space details
   const { currentSpace, fetchSpace, isLoading } = useSitesStore()
+  
+  // State: Template Mode logic is now managed by the database flag on the space itself
+  const isTemplateMode = currentSpace?.isTemplate || false
+
   // Editor Store integration for page updating callbacks
   const { updatePage, isLoading: isSaving, error: saveError } = useEditorStore()
 
@@ -166,12 +170,12 @@ export default function SpaceEditorPage() {
   const handleMergeEdits = () => setIsMergeModalOpen(true)
 
   // Loading Boundary state
-  if (isLoading && !currentSpace) {
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-full text-zinc-500 bg-[#0c0c0e]">
-        <div className="flex flex-col items-center gap-2 font-sans">
-          <div className="animate-spin w-6 h-6 border-2 border-t-indigo-500 border-zinc-700 rounded-full" />
-          <span className="text-xs">Loading space...</span>
+      <div className="flex-1 flex items-center justify-center bg-[#0c0c0e] text-[#8e8e93]">
+        <div className="flex items-center gap-2">
+          <div className="h-4 w-4 rounded-full border-2 border-[#8e8e93] border-t-transparent animate-spin" />
+          <span>Loading space...</span>
         </div>
       </div>
     )
@@ -193,8 +197,8 @@ export default function SpaceEditorPage() {
     )
   }
 
-  // Resolve header information
-  const siteName = currentSpace.site?.name || "Docs"
+  // Retrieve parent site name to display in the header breadcrumbs
+  const siteName = currentSpace.site?.name || "Documentation"
   const spaceName = currentSpace.name || "Space"
 
   return (
@@ -205,7 +209,7 @@ export default function SpaceEditorPage() {
 
         {/* Sub-header Navigation Panel */}
         <EditorHeader
-          orgId={orgId}
+          orgId={orgId!}
           spaceId={spaceId!}
           siteName={siteName}
           activeTab={activeTab}
@@ -219,14 +223,16 @@ export default function SpaceEditorPage() {
         <div className="flex-1 flex w-full overflow-hidden">
 
           {/* Sidebar Component: Page Navigation Lists, Add Page Triggers */}
-          <EditorSidebar
-            spaceId={spaceId!}
-            spaceName={spaceName}
-            selectedPage={selectedPage}
-            setSelectedPage={handleSelectPage}
-            setEditTitle={setEditTitle}
-            setEditContent={setEditContent}
-          />
+          {!isTemplateMode && (
+            <EditorSidebar
+              spaceId={spaceId!}
+              spaceName={spaceName}
+              selectedPage={selectedPage}
+              setSelectedPage={handleSelectPage}
+              setEditTitle={setEditTitle}
+              setEditContent={setEditContent}
+            />
+          )}
 
           {/* Main Document Canvas */}
           <EditorCanvas

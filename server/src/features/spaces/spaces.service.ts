@@ -57,7 +57,8 @@ export class SpacesService {
 
       // 1. Create a default workspace Space for the site
       const spaceId = `space_${Math.random().toString(36).substring(2, 7)}`
-      await this.repository.createSpace(spaceId, "Space", site.id)
+      const isTemplate = type === "template"
+      await this.repository.createSpace(spaceId, "Space", site.id, isTemplate)
 
       // 2. Determine initial welcome content (template placeholders vs parsed file imports)
       if (type === "template") {

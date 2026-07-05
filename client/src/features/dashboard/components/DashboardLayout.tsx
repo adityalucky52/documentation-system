@@ -3,13 +3,13 @@ import { useParams, useNavigate, Link, Outlet } from "react-router-dom"
 import { useAuthStore } from "../../auth/authStore"
 import { useSitesStore } from "@features/spaces/spacesStore"
 import CreateSiteModal from "@features/space-creation/components/CreateSpaceModal"
-import { 
-  ChevronDown, 
-  Search, 
-  Bell, 
-  Home, 
-  HelpCircle, 
-  Settings, 
+import {
+  ChevronDown,
+  Search,
+  Bell,
+  Home,
+  HelpCircle,
+  Settings,
   MessageSquare,
   Plus,
   LogOut,
@@ -40,13 +40,13 @@ import {
 export default function DashboardLayout() {
   const { orgId } = useParams<{ orgId: string }>()
   const navigate = useNavigate()
-  
+
   // Destructure active auth state and actions
   const { user, organization, fetchMyOrganization, logout, isLoading } = useAuthStore()
-  
+
   // Reference tracker to prevent redundant organization API requests on route changes
   const lastFetchedOrgId = useRef<string | null>(null)
-  
+
   // Destructure sites lists and modal trigger actions from the site store
   const { sites, fetchSites, isCreateModalOpen, setCreateModalOpen } = useSitesStore()
 
@@ -90,11 +90,11 @@ export default function DashboardLayout() {
 
   return (
     <div className="flex h-screen w-full bg-[#0c0c0e] text-white font-sans overflow-hidden">
-      
+
       {/* LEFT SIDEBAR SECTION */}
       <aside className="w-[240px] flex flex-col justify-between border-r border-[#1f1f23] bg-[#0c0c0e] shrink-0">
         <div className="flex flex-col pt-3 px-3 gap-6">
-          
+
           {/* Organization Selector, Search & Notification Panel */}
           <div className="flex items-center justify-between">
             <button className="flex items-center gap-1.5 hover:bg-[#1a1a1e] px-2 py-1.5 rounded-md text-sm font-medium transition-colors text-left truncate max-w-[140px]">
@@ -114,7 +114,7 @@ export default function DashboardLayout() {
 
           {/* Primary Sidebar Navigation (Home, Global Change Requests) */}
           <nav className="flex flex-col gap-0.5">
-            <Link 
+            <Link
               to={`/o/${orgId}/home`}
               className={`flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors ${window.location.pathname.endsWith("/home") ? "bg-[#1c1c1e] text-[#f4f4f5]" : "text-[#8e8e93] hover:text-white hover:bg-[#1a1a1e]"}`}
             >
@@ -122,7 +122,7 @@ export default function DashboardLayout() {
               <span>Home</span>
             </Link>
 
-            <Link 
+            <Link
               to={`/o/${orgId}/changes`}
               className={`flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors ${window.location.pathname.includes("/changes") ? "bg-[#1c1c1e] text-[#f4f4f5]" : "text-[#8e8e93] hover:text-white hover:bg-[#1a1a1e]"}`}
             >
@@ -138,7 +138,7 @@ export default function DashboardLayout() {
                 <span>Docs sites</span>
                 <ChevronDown className="h-3 w-3" />
               </button>
-              <button 
+              <button
                 onClick={() => setCreateModalOpen(true)}
                 className="p-1 hover:bg-[#1c1c1e] text-[#88888e] hover:text-white rounded transition-colors cursor-pointer"
                 title="Create a new site"
@@ -159,17 +159,17 @@ export default function DashboardLayout() {
                 {sites.map((site) => (
                   <div key={site.id} className="flex flex-col gap-0.5">
                     {/* Parent Site link (redirects to setup page) */}
-                    <Link 
+                    <Link
                       to={`/o/${orgId}/sites/${site.id}`}
                       className="flex items-center gap-2.5 hover:bg-[#1a1a1e] px-2.5 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer group text-[#8e8e93] hover:text-white"
                     >
-                      <svg 
-                        viewBox="0 0 24 24" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        strokeWidth="2" 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round" 
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
                         className="h-4 w-4 text-[#88888e] group-hover:text-white shrink-0 transition-colors"
                       >
                         <rect x="4" y="4" width="16" height="16" rx="2" />
@@ -180,23 +180,23 @@ export default function DashboardLayout() {
 
                     {/* Sub-spaces (Git-like branches/spaces inside site context) */}
                     {site.isSetup && site.spaces && site.spaces.map((space) => (
-                      <Link 
-                        to={`/o/${orgId}/s/${space.id}`}
+                      <Link
+                        to={`/o/${orgId}/s/${space.id}?type=${space.isTemplate ? 'template' : 'blank'}`}
                         key={space.id}
                         className="flex items-center gap-2 px-2.5 py-1.5 ml-4 rounded-md text-xs font-medium text-[#8e8e93] hover:text-white hover:bg-[#1a1a1e] transition-colors cursor-pointer group"
                       >
-                        <svg 
-                          viewBox="0 0 24 24" 
-                          fill="none" 
-                          stroke="currentColor" 
-                          strokeWidth="2" 
-                          strokeLinecap="round" 
-                          strokeLinejoin="round" 
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
                           className="h-3.5 w-3.5 text-[#88888e] group-hover:text-white shrink-0"
                         >
-                          <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/>
-                          <path d="M6 6h10"/>
-                          <path d="M6 10h10"/>
+                          <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
+                          <path d="M6 6h10" />
+                          <path d="M6 10h10" />
                         </svg>
                         <span className="truncate">{space.name}</span>
                       </Link>
@@ -221,8 +221,8 @@ export default function DashboardLayout() {
               <MessageSquare className="h-4 w-4" />
             </button>
           </div>
-          <button 
-            title="Log out" 
+          <button
+            title="Log out"
             onClick={handleLogout}
             className="p-1.5 hover:bg-[#1a1a1e] rounded-md text-[#88888e] hover:text-red-400 transition-colors cursor-pointer"
           >
@@ -237,9 +237,9 @@ export default function DashboardLayout() {
       </main>
 
       {/* CREATE SITE DIALOG POPUP */}
-      <CreateSiteModal 
-        isOpen={isCreateModalOpen} 
-        onClose={() => setCreateModalOpen(false)} 
+      <CreateSiteModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setCreateModalOpen(false)}
       />
     </div>
   )
