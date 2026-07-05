@@ -39,13 +39,14 @@ export default function SpaceEditorPage() {
     orgId: string
   }>()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { user } = useAuthStore()
 
   // Sites Store integration for space details
   const { currentSpace, fetchSpace, isLoading } = useSitesStore()
   
-  // State: Template Mode logic is now managed by the database flag on the space itself
-  const isTemplateMode = currentSpace?.isTemplate || false
+  // State: Template Mode logic is now managed by the database flag on the space itself or the URL param
+  const isTemplateMode = currentSpace?.isTemplate || searchParams.get("type") === "template"
 
   // Editor Store integration for page updating callbacks
   const { updatePage, isLoading: isSaving, error: saveError } = useEditorStore()
@@ -242,6 +243,9 @@ export default function SpaceEditorPage() {
             setEditTitle={setEditTitle}
             editContent={editContent}
             setEditContent={setEditContent}
+            isTemplateMode={isTemplateMode}
+            spaceName={spaceName}
+            siteName={siteName}
           />
         </div>
       </div>

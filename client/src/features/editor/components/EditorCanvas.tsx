@@ -2,6 +2,7 @@ import { Sparkles, } from "lucide-react"
 import RichTextEditor from "./RichTextEditor/RichTextEditor"
 import { parseMarkdownToHtml } from "@shared/utils/markdownParser"
 import type { Page } from "@entities/page/types"
+import TemplateViewer from "./templates/TemplateViewer"
 
 /**
  * EditorCanvas Props.
@@ -19,6 +20,9 @@ interface EditorCanvasProps {
   setEditTitle: (title: string) => void
   editContent: string | null
   setEditContent: (content: string | null) => void
+  isTemplateMode?: boolean
+  spaceName?: string
+  siteName?: string
 }
 
 /**
@@ -35,8 +39,26 @@ export default function EditorCanvas({
   editTitle,
   setEditTitle,
   editContent,
-  setEditContent
+  setEditContent,
+  isTemplateMode,
+  spaceName,
+  siteName
 }: EditorCanvasProps) {
+  if (isTemplateMode) {
+    return (
+      <div className="flex-1 flex flex-col bg-[#0c0c0e] overflow-auto relative font-sans">
+        <div className="min-w-[1200px] min-h-full h-full">
+          <TemplateViewer
+            content={editContent || ""}
+            title={editTitle || (selectedPage?.title ?? "")}
+            siteName={siteName || "Site"}
+            spaceName={spaceName || "Space"}
+          />
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="flex-1 flex flex-col bg-[#121214] overflow-hidden relative font-sans">
       <div className="flex-1 overflow-y-auto p-12 flex justify-center">
